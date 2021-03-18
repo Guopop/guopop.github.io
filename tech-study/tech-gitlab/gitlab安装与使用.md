@@ -203,6 +203,7 @@ variables:
 stages:
   - build
   - package
+  - deploy
 
 build:
   stage: build
