@@ -6,7 +6,7 @@ SOURCE_PATH=$BASE_PATH/build
 # 应用名称
 APP_NAME=$2
 # 环境
-PROFILES_ACTIVE=$3
+PROFILES_ACTIVE=dev
 
 DATE=$(date +%Y%m%d%H%M)
 
