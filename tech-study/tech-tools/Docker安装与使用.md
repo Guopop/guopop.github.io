@@ -194,6 +194,22 @@ docker run -id \
 	mysql
 ```
 
+docker-compose 部署 MySQL
+
+```yaml
+version: "3"
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    volumes:
+      - ./data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+```
+
 ### Tomcat 部署
 
 ```sh
@@ -337,4 +353,117 @@ services:
 ```sh
 docker-compose up -d
 ```
+
+### Postgres 部署
+
+docker-compose.yml
+
+```yaml
+version: '3'
+services:
+  postgres:
+    image: postgres
+    restart: always
+    container_name: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_USER: sonar
+      POSTGRES_DB: sonar
+    volumes:
+      - ./postgres.conf:/etc/postgresql/postgresql.conf
+      - ./data:/var/lib/postgresql/data
+```
+
+```
+docker-compose up -d
+```
+
+### Sonarqube 部署
+
+docker-compose.yml
+
+```yaml
+version: '3'
+services:
+  sonarqube:
+    image: sonarqube:8.7-community
+    restart: always
+    container_name: sonarqube
+    ports:
+      - 9000:9000
+    environment:
+      "sonar.jdbc.username": sonar
+      "sonar.jdbc.password": sonar
+      "sonar.jdbc.url": jdbc:postgresql://192.168.1.246:5432/sonar
+    volumes:
+      - ./conf:/opt/sonarqube/conf
+      - ./extensions:/opt/sonarqube/extensions
+      - ./logs:/opt/sonarqube/logs
+      - ./data:/opt/sonarqube/data
+```
+
+```sh
+docker-compose up -d
+```
+
+### Xxl-job 部署
+
+docker-compose.yml
+
+```yaml
+version: '3' 
+services:
+  xxljob:
+    image: xuxueli/xxl-job-admin:2.3.0
+    container_name: xxljob
+    ports:
+      - "8888:8080"
+    environment:
+      PARAMS: "--spring.datasource.url=jdbc:mysql://106.53.248.242:3306/xxl_job?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai --spring.datasource.username=root --spring.datasource.password=123456 --spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver"
+    volumes:
+      - ./logs:/data/applogs
+```
+
+### Gitlab 部署
+
+```yaml
+version: '3' 
+services: 
+  web: 
+    image: 'gitlab/gitlab-ce:latest'
+    restart: always 
+    hostname: '39.105.47.81' 
+    container_name: 'gitlab' 
+    environment: 
+      GITLAB_OMNIBUS_CONFIG: | 
+        external_url 'http://39.105.47.81:8880' 
+        gitlab_rails['gitlab_shell_ssh_port'] = 8822 
+        gitlab_rails['time_zone'] = 'Asia/Shanghai' 
+    ports: 
+      - '8880:8880' 
+      - '8443:443' 
+      - '8822:22' 
+    volumes: 
+      - './gitlab/config:/etc/gitlab' 
+      - './gitlab/logs:/var/log/gitlab' 
+      - './gitlab/data:/var/opt/gitlab'
+```
+
+### Gitlab Runner 部署
+
+```yaml
+version: '3'
+services:
+  gitlab_runner:
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner
+    restart: always
+  	volumes:
+  	  - './config:/etc/gitlab-runner'
+      - './run/docker.sock:/var/run/docker.sock'
+```
+
+
 
