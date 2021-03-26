@@ -51,7 +51,7 @@ services:
       # 此处的url,username,password是progresql的
       "sonar.jdbc.username": sonar
       "sonar.jdbc.password": sonar
-      "sonar.jdbc.url": jdbc:postgresql://192.168.1.246:5432/sonar
+      "sonar.jdbc.url": jdbc:postgresql://localhost:5432/sonar
     volumes:
       - ./conf:/opt/sonarqube/conf
       - ./extensions:/opt/sonarqube/extensions
@@ -144,7 +144,7 @@ sonar:
     - cd $APP_NAME
     # 将上面的sonar命令复制到这个地方
     # -Dsonar.qualitygate.wait=true 通过代码质量检查才可以部署
-    - mvn sonar:sonar -Dsonar.projectKey=sxuh-pay -Dsonar.host.url=http://192.168.1.246:9000 -Dsonar.login=0409677a0011416c24771431bcc5b856bb4f045e -Dsonar.qualitygate.wait=true
+    - mvn sonar:sonar -Dsonar.projectKey=sxuh-pay -Dsonar.host.url=http://localhost:9000 -Dsonar.login=0409677a0011416c24771431bcc5b856bb4f045e -Dsonar.qualitygate.wait=true
 
 deploy:
   stage: deploy

@@ -254,6 +254,6 @@ deploy
 
 push代码后，gitlab会显示对应进度流程
 
-<img src="D:\file\md_file\guopop.github.io\images\image-20210323172539595.png" alt="image-20210323172539595" style="zoom:67%;" />
+<img src="https://guopop.oss-cn-beijing.aliyuncs.com/img/image-20210323172539595.png" alt="image-20210323172539595" style="zoom:67%;" />
 
 ![image-20210323172559194](https://guopop.oss-cn-beijing.aliyuncs.com/img/image-20210323172559194.png)

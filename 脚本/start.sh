@@ -5,8 +5,8 @@ BASE_PATH=$1
 SOURCE_PATH=$BASE_PATH/build
 # 应用名称
 APP_NAME=$2
-# 环境
-PROFILES_ACTIVE=dev
+# 环境，不同的环境对应不同的配置，dev:开发; test:测试; prod:正式;
+PROFILES_ACTIVE=$3
 
 DATE=$(date +%Y%m%d%H%M)
 
@@ -39,7 +39,7 @@ function transfer() {
     else
         echo "[transfer] 移除 $BASE_PATH/$APP_NAME.jar 完成"
         rm $BASE_PATH/$APP_NAME.jar
-    fi  
+    fi
 
     # 复制新 jar 包
     echo "[transfer] 从 $SOURCE_PATH 中获取 $APP_NAME.jar 并迁移至 $BASE_PATH ...."
@@ -59,7 +59,7 @@ function stop() {
         kill -15 $PID
         # 等待最大 60 秒，直到关闭完成。
         for ((i = 0; i < 60; i++))
-            do  
+            do
                 sleep 1
                 PID=$(ps -ef | grep $BASE_PATH/$APP_NAME | grep -v "grep" | awk '{print $2}')
                 if [ -n "$PID" ]; then
@@ -68,8 +68,8 @@ function stop() {
                     echo '[stop] 停止 $BASE_PATH/$APP_NAME 成功'
                     break
                 fi
-		    done
-        
+                    done
+
         # 如果正常关闭失败，那么进行强制 kill -9 进行关闭
         if [ -n "$PID" ]; then
             echo "[stop] $BASE_PATH/$APP_NAME 失败，强制 kill -9 $PID"
@@ -86,9 +86,9 @@ function start() {
     echo "[start] 开始启动 $BASE_PATH/$APP_NAME"
     echo "[start] JAVA_OPS: $JAVA_OPS"
     echo "[start] PROFILES: $PROFILES_ACTIVE"
-    
+
     # 开始启动
-    BUILD_ID=dontKillMe nohup java -server $JAVA_OPS -jar $BASE_PATH/$APP_NAME.jar --spring.profiles.active=$PROFILES_ACTIVE > $BASE_PATH/start.log & 
+    BUILD_ID=dontKillMe nohup java -server $JAVA_OPS -jar $BASE_PATH/$APP_NAME.jar --spring.profiles.active=$PROFILES_ACTIVE > $BASE_PATH/start.log &
     echo "[start] 启动 $BASE_PATH/$APP_NAME 完成"
 }
 
