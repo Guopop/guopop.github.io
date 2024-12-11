@@ -23,8 +23,8 @@ features:
     link: https://vite.dev/
   - icon:
       src: /pinia.svg
-      width: 33px
-      height: 33px
+      width: 32px
+      height: 32px
     title: Pinia
     details: The intuitive store for Vue.js
     link: https://pinia.vuejs.org/
