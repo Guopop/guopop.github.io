@@ -4,7 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "guopop documents",
   description: "some documents",
-  base: "/doc/"
+  base: "/"
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
