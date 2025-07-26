@@ -6,7 +6,11 @@
 
 [🔥 数据模型适配 CloudKit 的规则与注意事项](https://fatbobman.com/zh/snippet/rules-for-adapting-data-models-to-cloudkit/)
 
-> 在启用 CloudKit 能力之后，SwiftData 会自动同步数据到 CloudKit 私有数据库
+[SwiftData: Synchronize Model Data with iCloud (Automatic With ModelContainer)](https://levelup.gitconnected.com/swiftdata-synchronize-model-data-with-icloud-automatic-with-modelcontainer-e37bce84024c)
+
+> 在启用 CloudKit 能力之后，SwiftData 会自动同步数据到 CloudKit `私有数据库`
+> 
+> SwiftData 只会同步到 `私有数据库`
 
 ## iCloud 三种不同的数据存储方式
 
@@ -54,3 +58,21 @@
 - `@Relationship` 必须设置成 `optional`
 - `@Relationship` 必须设置 `inverse`
 - `@Relationship` 删除规则(`deleteRule`)不允许设置成 `deny`
+
+## 查看同步到 CloudKit 的数据
+
+1. 登录 CloudKit Console (可在配置页面快速跳转)
+2. 登录指定 iCloud Account (页面上 `Act As iCloud Account`)
+3. 配置查询属性的 Queryable 索引 (Schema -> Indexes -> 加号 -> Type, Name, QUERYABLE, recordName)
+4. 查询 Data -> Records -> 选择 Private Database -> 选择相应的 Zone -> Query Records
+
+## SwiftData 关闭同步 CloudKit
+
+```swift
+let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .none)
+```
+
+cloudKitDatabase 有三个可选值：`automatic`(默认自动同步)、`none`(不同步)、`private`(指定 Container)
+
+通过变量控制 cloudKitDatabase 可实现会员同步，非会员不同步。
+
