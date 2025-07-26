@@ -9,7 +9,8 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'SwiftData', link: '/swiftData/swiftDataWithICloud' }
+      { text: 'SwiftData', link: '/swiftData/swiftDataWithICloud' },
+      { text: 'Article', link: '/article/幸福的无关.md' }
     ],
 
     sidebar: {
@@ -18,6 +19,14 @@ export default defineConfig({
           text: 'SwiftData',
           items: [
             { text: 'SwiftData 集成 iCloud', link: '/swiftData/swiftDataWithICloud'}
+          ]
+        }
+      ],
+      '/article/': [
+        {
+          text: 'Article',
+          items: [
+            { text: '幸福的无关', link: '/article/幸福的无关'}
           ]
         }
       ]
