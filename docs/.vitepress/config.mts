@@ -10,7 +10,8 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'SwiftData', link: '/swiftData/swiftDataWithICloud' },
-      { text: 'Article', link: '/article/幸福的无关.md' }
+      { text: 'Article', link: '/article/幸福的无关.md' },
+      { text: 'Book', link: '/book/西西弗神话.md' }
     ],
 
     sidebar: {
@@ -28,6 +29,14 @@ export default defineConfig({
           items: [
             { text: '幸福的无关', link: '/article/幸福的无关'},
             { text: '人人想做他们人', link: '/article/人人想做他们人'}
+          ]
+        }
+      ],
+      '/Book/': [
+        {
+          text: 'Book',
+          items: [
+            { text: '西西弗神话', link: '/book/西西弗神话.md'}
           ]
         }
       ]
