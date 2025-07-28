@@ -66,13 +66,3 @@
 3. 配置查询属性的 Queryable 索引 (Schema -> Indexes -> 加号 -> Type, Name, QUERYABLE, recordName)
 4. 查询 Data -> Records -> 选择 Private Database -> 选择相应的 Zone -> Query Records
 
-## SwiftData 关闭同步 CloudKit
-
-```swift
-let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .none)
-```
-
-cloudKitDatabase 有三个可选值：`automatic`(默认自动同步)、`none`(不同步)、`private`(指定 Container)
-
-通过变量控制 cloudKitDatabase 可实现会员同步，非会员不同步。
-
