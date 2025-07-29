@@ -28,7 +28,9 @@ export default defineConfig({
           text: 'Article',
           items: [
             { text: '幸福的无关', link: '/article/幸福的无关'},
-            { text: '人人想做他们人', link: '/article/人人想做他们人'}
+            { text: '人人想做他们人', link: '/article/人人想做他们人'},
+            { text: '罗素：一九二零', link: '/article/罗素：一九二零'},
+            { text: '万物从容', link: '/article/万物从容'}
           ]
         }
       ],
