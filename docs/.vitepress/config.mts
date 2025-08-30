@@ -19,7 +19,8 @@ export default defineConfig({
         {
           text: 'SwiftData',
           items: [
-            { text: 'SwiftData 集成 iCloud', link: '/swiftData/swiftDataWithICloud'}
+            { text: 'SwiftData 集成 iCloud', link: '/swiftData/swiftDataWithICloud'},
+            { text: 'SwiftData 注意事项', link: '/swiftData/swiftDataNotice'}
           ]
         }
       ],
@@ -34,11 +35,19 @@ export default defineConfig({
           ]
         }
       ],
-      '/Book/': [
+      '/book/': [
         {
           text: 'Book',
           items: [
-            { text: '西西弗神话', link: '/book/西西弗神话.md'}
+            { text: '西西弗神话', link: '/book/西西弗神话'}
+          ]
+        }
+      ]
+      '/study/': [
+        {
+          text: 'Study',
+          items: [
+            { text: 'swift 从零到一', link: '/study/swiftZeroToOne'}
           ]
         }
       ]
