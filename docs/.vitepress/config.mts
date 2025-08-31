@@ -43,7 +43,7 @@ export default defineConfig({
             { text: '西西弗神话', link: '/book/西西弗神话'}
           ]
         }
-      ]
+      ],
       '/study/': [
         {
           text: 'Study',
