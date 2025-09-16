@@ -38,12 +38,12 @@
 
 配置步骤
 
-1. 项目结构 -> Targets -> Signing & Capabilities
-2. 添加 iCloud Capability
-3. 选择 CloudKit Services
+1. 项目结构 -> Targets `Scroll` -> Signing & Capabilities
+2. 添加 `iCloud` Capability
+3. 选择 `CloudKit` Services
 4. 创建或选择一个 Container ，命名标准 `iCloud.` + Bundle Identifier
 5. 添加 `Background Modes` Capability
-6. 选择 Remote notifications
+6. 选择 `Remote notifications`
 
 ## SwiftData 数据模型
 
