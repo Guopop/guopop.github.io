@@ -174,3 +174,5 @@
 
 [深度解读 Observation —— SwiftUI 性能提升的新途径](https://fatbobman.com/zh/posts/mastering-observation/)
 
+[NSManagedObjectID 与 PersistentIdentifier：掌握 Core Data 与 SwiftData 中的数据标识符](https://fatbobman.com/zh/posts/nsmanagedobjectid-and-persistentidentifier/)
+
