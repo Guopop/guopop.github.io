@@ -11,7 +11,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Article', link: '/article/幸福的无关' },
       { text: 'Book', link: '/book/西西弗神话' },
-      { text: 'Tech', link: '/tech/swiftZeroToOne' },
+      { text: 'Tech', link: '/tech/AppleDevelop' },
     ],
 
     sidebar: {

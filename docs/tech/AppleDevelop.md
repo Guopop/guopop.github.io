@@ -1,8 +1,6 @@
-# swift 开发从零到一
+# 苹果开发从零到一
 
 [Develop in Swift](https://developer.apple.com/tutorials/develop-in-swift/)
-
-[Source control management](https://developer.apple.com/documentation/xcode/source-control-management)
 
 `.background` 使用研究
 
