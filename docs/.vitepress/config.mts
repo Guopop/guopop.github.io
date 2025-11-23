@@ -9,22 +9,12 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'SwiftData', link: '/swiftData/swiftDataWithICloud' },
       { text: 'Article', link: '/article/幸福的无关' },
       { text: 'Book', link: '/book/西西弗神话' },
-      { text: 'Study', link: '/study/swiftZeroToOne' }
+      { text: 'Tech', link: '/tech/swiftZeroToOne' },
     ],
 
     sidebar: {
-      '/swiftData/': [
-        {
-          text: 'SwiftData',
-          items: [
-            { text: 'SwiftData 集成 iCloud', link: '/swiftData/swiftDataWithICloud'},
-            { text: 'SwiftData 注意事项', link: '/swiftData/swiftDataNotice'}
-          ]
-        }
-      ],
       '/article/': [
         {
           text: 'Article',
@@ -44,11 +34,14 @@ export default defineConfig({
           ]
         }
       ],
-      '/study/': [
+      '/tech/': [
         {
-          text: 'Study',
+          text: 'Tech',
           items: [
-            { text: 'swift 从零到一', link: '/study/swiftZeroToOne'}
+            { text: 'Apple Develop', link: '/tech/AppleDevelop'},
+            { text: 'SwiftData 注意事项', link: '/tech/SwiftDataNotice'},
+            { text: 'SwiftData 集成 CloudKit', link: '/tech/SwiftDataWithCloudKit'},
+            { text: 'SwiftUI + SwiftData 项目骨架', link: '/tech/SwiftUISwiftDataArchitecture'},
           ]
         }
       ]

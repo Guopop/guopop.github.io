@@ -1,5 +1,3 @@
-# SwiftUI SwiftData 项目架构
-
 # SwiftUI + SwiftData 项目骨架
 
 下面是一个可直接拷贝到 Xcode 的项目骨架示例，包含常见目录与每层 demo 文件模板。
