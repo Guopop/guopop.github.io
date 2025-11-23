@@ -174,3 +174,4 @@
 
 [NSManagedObjectID 与 PersistentIdentifier：掌握 Core Data 与 SwiftData 中的数据标识符](https://fatbobman.com/zh/posts/nsmanagedobjectid-and-persistentidentifier/)
 
+[Playing with Sheet (on iOS)](https://captainswiftui.substack.com/p/playing-with-sheet-on-ios?utm_source=fatbobman%20weekly%20issue%20109&utm_medium=web)

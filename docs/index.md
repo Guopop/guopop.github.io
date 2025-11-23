@@ -3,6 +3,8 @@
 layout: home
 
 hero:
-  name: "guopop documents"
+  name: ""
+#  tagline: "当下、具体、行动、思考、德行、善良、平静"
+  tagline: "Guopop Doc"
 ---
 
