@@ -4,7 +4,7 @@ import type { ThemeConfig } from '../src/types';
 
 const { posts, rewrites } = await usePosts({
   pageSize: 6,
-  homepage: false,
+  homepage: true,
   srcDir: 'posts',
   autoExcerpt: 150
 });
@@ -23,7 +23,6 @@ export default defineConfig<ThemeConfig>({
     outline: { level: 2 },
     nav: [
       { text: '首页', link: '/' },
-      { text: '文章', link: '/page-1' },
       { text: '文档', link: '/docs/doc1' },
       { text: '分类', link: '/category' },
       { text: '归档', link: '/archives' }
