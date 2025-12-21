@@ -1,6 +1,7 @@
 ---
 title: 输入访问密码
 layout: page
+publish: false
 ---
 
 <script setup>

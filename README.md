@@ -1,1 +1,5 @@
+---
+publish: false
+---
+
 # guopop blog
