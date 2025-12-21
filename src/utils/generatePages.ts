@@ -21,6 +21,7 @@ export const generatePages = async (
     const page = `
 ---${title}
 layout: page
+publish: false
 ---
 
 <Page :pagination="${i}" :total="${pageTotal}" :size="${pageSize}" :homepage="${homepage}">${slot}</Page>
@@ -34,8 +35,9 @@ ${custom}
     const page = `
 ---
 layout: page
+publish: false
 ---
-<Home imgUrl="/profile.png" title="只抄" desc="Less is more." :links="[{ url: 'https://github.com/izhichao/vitepress-theme-minimalism', text: 'Github ->' }]" />
+<Home imgUrl="/profile.png" title="guopop" desc="Less is more." :links="[{ url: 'https://github.com/izhichao/vitepress-theme-minimalism', text: 'Github ->' }]" />
     `.trim();
     await fs.writeFile(indexPath, page);
   }
