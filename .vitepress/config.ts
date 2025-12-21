@@ -40,25 +40,6 @@ export default defineConfig<ThemeConfig>({
           ]
         }
       ]
-    },
-    socialLinks: [{ icon: 'github', link: 'https://github.com/izhichao/vitepress-theme-minimalism' }],
-    footer: {
-      message:
-        'Theme by <a href="https://github.com/izhichao/vitepress-theme-minimalism" target="_blank">Minimalism</a>',
-      copyright: 'Copyright © 2017-2025 <a href="https://github.com/izhichao" target="_blank">只抄</a>'
-    },
-  },
-  markdown: {
-    lineNumbers: true,
-    config: (md) => {
-      md.use((md) => {
-        md.renderer.rules.heading_close = (tokens, idx, options, env, slf) => {
-          let htmlResult = slf.renderToken(tokens, idx, options);
-          if (tokens[idx].tag === 'h1') htmlResult += `<PostMeta />`;
-          return htmlResult;
-        };
-      });
     }
-  },
-  srcExclude: ['README.md', 'README_en-US.md']
+  }
 });
