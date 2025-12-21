@@ -11,6 +11,32 @@ const { posts, rewrites } = await usePosts({
 
 export default defineConfig<ThemeConfig>({
   title: 'guopop',
+  rss: {
+    title: '我的博客',
+    baseUrl: 'https://guopop.github.io',
+    description: '技术分享与学习笔记',
+    copyright: 'Copyright © 2023',
+    language: 'zh-CN',
+    author: {
+      name: '你的名字',
+      email: 'your-email@example.com',
+      link: 'https://guopop.github.io'
+    },
+
+    // 可选：自定义输出路径
+    output: {
+      atom: {
+        enabled: true,
+        path: '/feed.xml'  // 默认路径
+      },
+      json: {
+        enabled: false
+      }
+    },
+
+    // 可选：自定义排序
+    sort: (a, b) => +new Date(b.frontmatter.datetime) - +new Date(a.frontmatter.datetime)
+  },
   rewrites,
   cleanUrls: true,
   ignoreDeadLinks: true,
@@ -40,6 +66,9 @@ export default defineConfig<ThemeConfig>({
           ]
         }
       ]
-    }
+    },
+    socialLinks: [
+      { icon: 'rss', link: '/feed.xml' }
+    ]
   }
 });
