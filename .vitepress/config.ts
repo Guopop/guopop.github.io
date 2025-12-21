@@ -7,12 +7,6 @@ const baseUrl = 'https://guopop.github.io'
 const RSS: RSSOptions = {
   title: 'guopop',
   baseUrl,
-  copyright: 'Copyright (c) 2018-present, guopop',
-  author: {
-    name: 'guopop',
-    email: 'guopopsolo@163.com',
-    link: 'https://guopop.github.io'
-  },
   icon: true
 }
 
