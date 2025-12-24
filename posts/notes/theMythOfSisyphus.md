@@ -1,6 +1,6 @@
 ---
 title: 《西西弗神话》读书笔记
-datetime: '2025-09-01 10:00:00'
+datetime: '2025-07-28 12:09:00'
 permalink: /posts/note_theMythOfSisyphus
 desc: 在一个人对生命的眷恋中，有某样东西是高于人世间的一切苦难的。
 category: 读书笔记

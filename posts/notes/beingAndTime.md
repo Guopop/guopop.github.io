@@ -1,6 +1,6 @@
 ---
 title: 《存在与时间》读书笔记
-datetime: '2025-10-01 10:00:00'
+datetime: '2025-08-24 20:20:00'
 permalink: /posts/note_beingAndTime
 desc: 此在在它的存在中总以某种方式、某种明确性对自身有所领会。
 category: 读书笔记
