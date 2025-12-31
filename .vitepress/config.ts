@@ -10,7 +10,6 @@ const RSS: RSSOptions = {
   icon: true
 }
 
-
 const { posts, rewrites } = await usePosts({
   pageSize: 6,
   homepage: true,
