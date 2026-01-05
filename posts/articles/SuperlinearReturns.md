@@ -1,6 +1,7 @@
 ---
 title: Superlinear Returns
 datetime: '2024-02-07 16:07:00'
+permalink: /posts/article_2
 category: 好文章
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: What to do
 datetime: '2025-07-09 11:48:00'
+permalink: /posts/article_3
 category: 好文章
 ---
 

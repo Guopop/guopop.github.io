@@ -1,6 +1,7 @@
 ---
 title: How to do great work
 datetime: '2024-02-07 15:28:00'
+permalink: /posts/article_1
 category: 好文章
 ---
 

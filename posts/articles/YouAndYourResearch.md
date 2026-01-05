@@ -1,6 +1,7 @@
 ---
 title: You and Your Research
 datetime: '2023-08-20 14:21:00'
+permalink: /posts/article_4
 category: 好文章
 ---
 

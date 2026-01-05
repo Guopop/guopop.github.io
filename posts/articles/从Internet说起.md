@@ -1,6 +1,7 @@
 ---
 title: 从Internet说起
 datetime: '2025-07-14 12:07:00'
+permalink: /posts/article_66
 category: 好文章
 ---
 
