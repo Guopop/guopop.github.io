@@ -15,8 +15,8 @@ const { posts, rewrites } = await usePosts({
   homepage: true,
   srcDir: 'posts',
   autoExcerpt: 150,
-  prev: false,
-  next: false
+  prev: true,
+  next: true
 });
 
 export default defineConfig<ThemeConfig>({
