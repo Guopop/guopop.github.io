@@ -5,7 +5,7 @@ permalink: /posts/article_4
 category: 好文章
 ---
 
-You and Your Research
+# You and Your Research
 
 Richard Hamming
 

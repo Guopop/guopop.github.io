@@ -5,7 +5,7 @@ permalink: /posts/article_2
 category: 好文章
 ---
 
-Superlinear Returns
+# Superlinear Returns
 
 Paul Graham
 

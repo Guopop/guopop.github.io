@@ -5,7 +5,7 @@ permalink: /posts/article_66
 category: 好文章
 ---
 
-从Internet说起
+# 从Internet说起
 
 王小波
 

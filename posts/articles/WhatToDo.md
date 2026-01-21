@@ -5,7 +5,7 @@ permalink: /posts/article_3
 category: 好文章
 ---
 
-What to do
+# What to do
 
 Paul Graham
 

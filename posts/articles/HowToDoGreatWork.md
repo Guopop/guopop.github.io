@@ -5,7 +5,7 @@ permalink: /posts/article_1
 category: 好文章
 ---
 
-How to do great work
+# How to do great work
 
 Paul Graham
 
