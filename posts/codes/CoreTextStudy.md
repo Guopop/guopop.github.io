@@ -4,7 +4,7 @@ datetime: '2026-04-11 14:00:00'
 permalink: /posts/code_coretext_001
 category: 技术
 tags:
-  - `Core Text`
+  - Core Text
 ---
 
 # Core Text 学习
