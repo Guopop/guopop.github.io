@@ -32,3 +32,15 @@ tags:
 [用 TextRenderer 构建绚丽动感的文字效果](https://fatbobman.com/zh/posts/creating-stunning-dynamic-text-effects-with-textrender/)
 
 [Marcin Krzyzanowski: Let's Make That Label With CoreText](https://www.youtube.com/watch?v=GZqeYvu-KFc)
+
+[Core Text 编程指南](https://juejin.cn/post/6844903769864404999)
+
+[基于 CoreText 的排版引擎：基础](https://blog.devtang.com/2015/06/26/using-coretext-1/)
+
+[基于 CoreText 的排版引擎：进阶](https://blog.devtang.com/2015/06/26/using-coretext-2/)
+
+[CoreText使用说明书](https://xilankong.github.io/ios开发基础/2017/09/04/CoreText使用说明书.html)
+
+[CoreText基础概念（扫盲篇）](https://yangchao0033.github.io/blog/2016/01/26/coretextji-chu/)
+
+[About Core Text](https://developer.apple.com/library/archive/documentation/StringsTextFonts/Conceptual/CoreText_Programming/Introduction/Introduction.html#//apple_ref/doc/uid/TP40005533)
