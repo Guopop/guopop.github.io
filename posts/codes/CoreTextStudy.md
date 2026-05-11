@@ -44,3 +44,11 @@ tags:
 [CoreText基础概念（扫盲篇）](https://yangchao0033.github.io/blog/2016/01/26/coretextji-chu/)
 
 [About Core Text](https://developer.apple.com/library/archive/documentation/StringsTextFonts/Conceptual/CoreText_Programming/Introduction/Introduction.html#//apple_ref/doc/uid/TP40005533)
+
+[CoreText 入坑一](https://juejin.cn/post/6844903443593691144)
+
+[CoreText的简单使用（一）](https://juejin.cn/post/6970879379425460255/)
+
+[CoreText的简单使用（二）](https://juejin.cn/post/6970879593129443336/)
+
+[CoreText使用说明书](https://xilankong.github.io/ios开发基础/2017/09/04/CoreText使用说明书.html)
