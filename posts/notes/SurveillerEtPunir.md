@@ -1,6 +1,6 @@
 ---
 title: 《规训与惩罚》读书笔记
-datetime: '2024-07-13 10:22:00'
+datetime: '2026-07-13 10:22:00'
 permalink: /posts/note_SurveillerEtPunir
 desc: 在一切规训系统的核心都有一个小型处罚机制。
 category: 读书笔记

@@ -1,6 +1,6 @@
 ---
 title: 《红书》读书笔记
-datetime: '2024-05-20 21:13:00'
+datetime: '2026-05-20 21:13:00'
 permalink: /posts/note_TheRedBook
 desc: 我独自一人，我用孤独填满自己的生命。
 category: 读书笔记

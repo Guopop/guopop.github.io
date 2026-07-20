@@ -1,6 +1,6 @@
 ---
 title: 《附录与补遗第一卷》读书笔记
-datetime: '2024-07-13 10:20:00'
+datetime: '2026-07-13 10:20:00'
 permalink: /posts/note_ParergaUndParalipomenaFirst
 desc: 我们是囿于我们自己的意识之中，我们看到的世界只是表象。
 category: 读书笔记
