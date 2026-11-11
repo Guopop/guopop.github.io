@@ -1,5 +1,5 @@
 [latestPosts]
-    other = '最新'
+    other = ''
 
 [readMore]
     other = '阅读全文'
@@ -17,10 +17,10 @@
     other = '你访问的链接可能已失效，或该页面不存在。'
 
 [newerPosts]
-    other = ''
+    other = '>>'
 
 [olderPosts]
-    other = ''
+    other = '<<'
 
 [docsMenu]
     other = '文档菜单'
