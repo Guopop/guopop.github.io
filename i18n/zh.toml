@@ -1,5 +1,5 @@
 [latestPosts]
-    other = '最新文章'
+    other = '最新'
 
 [readMore]
     other = '阅读全文'
@@ -7,11 +7,20 @@
 [summary]
     other = '摘要'
 
+[estimatedReadingTime]
+    other = '预计阅读时间：%d 分钟'
+
 [404_title]
     other = '页面未找到'
 
 [404_text]
     other = '你访问的链接可能已失效，或该页面不存在。'
+
+[newerPosts]
+    other = '之后'
+
+[olderPosts]
+    other = '之前'
 
 [docsMenu]
     other = '文档菜单'
