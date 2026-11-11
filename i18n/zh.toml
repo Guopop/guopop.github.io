@@ -8,7 +8,7 @@
     other = '摘要'
 
 [estimatedReadingTime]
-    other = '预计阅读时间：%d 分钟'
+    other = ''
 
 [404_title]
     other = '页面未找到'
@@ -17,10 +17,10 @@
     other = '你访问的链接可能已失效，或该页面不存在。'
 
 [newerPosts]
-    other = '之后'
+    other = ''
 
 [olderPosts]
-    other = '之前'
+    other = ''
 
 [docsMenu]
     other = '文档菜单'
