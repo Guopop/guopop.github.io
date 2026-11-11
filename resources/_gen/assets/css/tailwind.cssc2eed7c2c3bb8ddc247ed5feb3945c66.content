@@ -500,13 +500,23 @@ video {
   display: none;
 }
   /* Inter, variable weight 100-900, Latin subset (SIL Open Font License, see static/fonts/Inter-LICENSE.txt) */
-  @font-face {
+  /*@font-face {
     font-family: 'Inter';
     font-style: normal;
     font-display: swap;
     font-weight: 100 900;
     src: url('../fonts/inter-latin-wght-normal.woff2') format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }*/
+
+  @font-face {
+    font-family: 'LXGWWenKai-Regular';
+    font-display: swap;
+    src: url('../fonts/LXGWWenKai-Regular.ttf') format('ttf');
+  }
+
+  html {
+    font-family: 'LXGWWenKai-Regular', serif;
   }
 
   body {
@@ -789,14 +799,23 @@ video {
   font-size: 0.75rem;
   line-height: 1rem;
 }
+.static {
+  position: static;
+}
 .absolute {
   position: absolute;
+}
+.relative {
+  position: relative;
 }
 .order-1 {
   order: 1;
 }
 .order-2 {
   order: 2;
+}
+.m-1 {
+  margin: 0.25rem;
 }
 .mx-auto {
   margin-left: auto;
@@ -816,6 +835,9 @@ video {
 }
 .flex {
   display: flex;
+}
+.table {
+  display: table;
 }
 .grid {
   display: grid;
@@ -846,6 +868,9 @@ video {
 }
 .flex-none {
   flex: none;
+}
+.grow {
+  flex-grow: 1;
 }
 .grid-cols-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -943,6 +968,14 @@ video {
 .text-gray-500 {
   --tw-text-opacity: 1;
   color: rgb(107 114 128 / var(--tw-text-opacity, 1));
+}
+.shadow {
+  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.filter {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }  
   nav a.active {
   --tw-text-opacity: 1;
@@ -980,6 +1013,10 @@ video {
   #content a:hover:is(.dark *) {
   --tw-text-opacity: 1;
   color: rgb(167 243 208 / var(--tw-text-opacity, 1));
+}
+  
+  #content li {
+  margin-bottom: 0.5rem;
 }
   
   #content .date {
