@@ -1,0 +1,33 @@
+baseURL = 'https://guopop.github.io' # Change to your own domain
+copyright = "2017 - {year}" # To make 2007 - 2022. Just add before {year} example: 2007 - {year}
+locale = 'zh-cn'
+languageCode = 'zh-cn'
+defaultContentLanguage = 'zh'
+theme = 'lowkey'
+title = 'Guopop'
+enableRobotsTXT = true
+hasCJKLanguage = true
+summarylength = 15
+
+[pagination]
+  pagerSize = 5
+
+[markup]
+  [markup.highlight]
+    anchorLineNos = false
+    codeFences = true
+    guessSyntax = false
+    hl_Lines = ''
+    hl_inline = false
+    lineAnchors = ''
+    lineNoStart = 1
+    lineNos = false
+    lineNumbersInTable = false
+    noClasses = true
+    noHl = false
+    style = 'dracula'
+    tabWidth = 4
+
+[caches]
+  [caches.images]
+    dir = ':cacheDir/images'

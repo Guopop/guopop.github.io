@@ -1,0 +1,29 @@
+[[main]]
+    identifier = "home"
+    name = "主页"
+    url = "/"
+    weight = 1
+    
+[[main]]
+    identifier = "blog"
+    name = "博客"
+    url = "/posts/"
+    weight = 2
+    
+[[main]]
+    identifier = "booknote"
+    name = "读书笔记"
+    url = "/notes/"
+    weight = 3
+    
+[[main]]
+    identifier = "article"
+    name = "好文章"
+    url = "/articles/"
+    weight = 4
+    
+[[main]]
+    identifier = "about"
+    name = "关于我"
+    url = "/about/"
+    weight = 5
