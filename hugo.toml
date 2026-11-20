@@ -1,0 +1,54 @@
+baseURL = 'https://guopop.github.io'
+locale = 'zh-cn'
+defaultContentLanguage = 'zh-cn'
+title = 'Guopop'
+theme = 'chaos'
+
+# Required for CJK content: without it Hugo counts a whole Chinese sentence as
+# one word, so the reading stats are an order of magnitude too low and
+# .Summary never truncates -- list pages print whole articles. The theme
+# cannot set this for you; Hugo does not inherit it from theme config.
+hasCJKLanguage = true
+summaryLength = 1
+
+# Collapse soft line breaks inside CJK paragraphs at parse time (including
+# after full-width punctuation via 'css3draft'), so wrapped source lines do not
+# turn into mid-sentence spaces in HTML or feeds.
+[markup.goldmark.extensions.cjk]
+  enable = true
+  eastAsianLineBreaks = true
+  eastAsianLineBreaksStyle = 'css3draft'
+  escapedSpace = true
+  
+# Hugo does not inherit [outputs] from a theme, so name the formats here or
+# /feed.xsl, /sitemap.xsl and /atom.xml are never built.
+[outputs]
+  home = ['HTML', 'ATOM', 'sitemapxsl', 'RSS', 'feedxsl', 'REDIR']
+  section = ['HTML']
+  taxonomy = ['HTML']
+  term = ['HTML']
+
+[menus]
+  [[menus.main]]
+    identifier = 'home'
+    pageRef = '/'
+    weight = 10
+  [[menus.main]]
+    identifier = 'categories'
+    pageRef = '/categories'
+    weight = 20
+
+  [[menus.main]]
+    identifier = 'archives'
+    pageRef = '/archives'
+    weight = 30
+    
+[params]
+  mainSections = ['posts']
+  excludedTags = ["TagToHide"]
+    
+  [params.author]
+    name = 'Guopop'
+    
+  [params.search]
+    enable = true

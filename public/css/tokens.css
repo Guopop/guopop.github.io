@@ -1,0 +1,709 @@
+/* ==========================================================================
+   DESIGN TOKENS
+   The single definition of the palette, type scale, spacing and the vendored
+   monospace face. Consumed twice: bundled into the site stylesheet by
+   head/css.html, and inlined into the XSLT-rendered feed and sitemap pages by
+   _funcs/get-xsl-css.html, which cannot link a stylesheet the way a normal
+   page can. Keeping one copy is the point -- a palette change that lands in only
+   one of the two is the failure this file exists to prevent.
+
+   Executed as a Go template (resources.ExecuteAsTemplate) for one reason: the
+   @font-face URL. A relative URL would be correct in the bundle and wrong when
+   inlined -- inside a <style> element a relative URL resolves against the
+   document, not against a stylesheet -- so it is emitted absolute, which is
+   correct in both and under a subdirectory baseURL.
+   ========================================================================== */
+
+/* ==========================================================================
+   CASCADE LAYERS
+   The theme's whole layer order, declared here because this is the first
+   sheet in the bundle and the first declaration fixes the order. Later
+   layers win regardless of specificity; unlayered CSS -- a site's own
+   stylesheet -- beats every one of them.
+
+     chaos.reset       normalize.css
+     chaos.tokens      this file: custom properties, light, dark and mobile
+     chaos.base        prose.css: element defaults and their states
+     chaos.syntax      syntax.css: Chroma classes onto the --syntax-* roles
+     chaos.components  prose.css (callouts, code layout), then main.css:
+                       everything with a class or id
+
+   The XSLT-rendered pages inline this file and prose.css too, ahead of
+   unlayered sheets of their own, which therefore win without a contest.
+   @font-face stays outside: a font face is not part of the cascade.
+   ========================================================================== */
+
+@layer chaos.reset, chaos.tokens, chaos.base, chaos.syntax, chaos.components;
+
+@font-face {
+  font-family: "Noto Sans Mono";
+  src: url("/_3p/noto-sans-mono/2.014/noto-sans-mono-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+2010-2015, U+2018-201F, U+2026, U+2030,
+                 U+2032-2033, U+20AC, U+2190-2193, U+2212, U+2260, U+2264-2265;
+}
+
+/* Digits-only slice of the same preloaded Noto Sans Mono file (zero extra
+   network transfer), so prose-shaped metadata such as .reading-stats can match
+   adjacent <time> numerals while keeping letters and CJK on --font-sans. */
+@font-face {
+  font-family: "Chaos Mono Digits";
+  src: url("/_3p/noto-sans-mono/2.014/noto-sans-mono-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+}
+
+/* Optical weight and glyph-face compensation for CJK emphasis (--font-em).
+   Traditional KaiTi and SongTi faces (~54-75 px^2 ink at 16px, ~82-84% glyph
+   face) look thin or shrunken inside modern sans-serif prose (~87 px^2 ink,
+   ~92% glyph face):
+   - Multi-weight KaiTi steps normal emphasis (100-500) up to Medium / macOS
+     Kaiti Bold (OS/2 weight 400) and bold emphasis (600-900) to Bold / Black.
+   - CJK serif fallback steps multi-weight Noto/Source Han Serif up to Medium,
+     while two-weight Songti SC uses Regular (400) for 100-500 and Bold (700)
+     for 600-900 so normal emphasis never jumps to a 700 bold face.
+   - Single-weight faces (WenKai Screen, Windows KaiTi, SimSun, Linux UKai /
+     Fandol) sit in 400-only fallback families so browsers synthesize bold on
+     top of the 106% face at 600-900 instead of switching families.
+   - unicode-range covers Han ideographs only (radicals, 々/〇/〻, Unified and
+     Compatibility Ideographs), deliberately excluding full-width CJK
+     punctuation (U+3000-3004, U+3008-3020, U+FF00-FFEF): KaiTi and legacy
+     SongTi lack OpenType halt/chws tables, so letting punctuation fall through
+     to the body CJK sans-serif keeps it at 1em with working punctuation trim.
+   - Simplified and Traditional Chinese families stay strictly separated via
+     :lang() so Big5-only KaiTi (BiauKai, DFKai-SB) cannot create ransom-note
+     glyph mixing on Simplified pages.
+   - CSS local() matches OpenType Full Name (ID 4) and PostScript Name (ID 6),
+     never a bare Family Name (ID 1); pairing ASCII PostScript names alongside
+     English Full Names also covers CJK-locale Windows where ID 4 is localized.
+     Some entries below look like family names but are Full Names, so keep
+     them: Adobe-style CJK fonts drop "Regular" from the Regular face's Full
+     Name ("Noto Serif CJK SC", "Source Han Serif" name that one face). Where
+     a vendor's choice is not certain, both forms are listed ("LXGW WenKai" and
+     "LXGW WenKai Regular"); an unmatched name costs nothing. */
+@font-face {
+  font-family: "Chaos Kai";
+  src: local("LXGWWenKai-Medium"), local("LXGW WenKai Medium"),
+       local("STKaitiSC-Bold"), local("Kaiti SC Bold");
+  font-weight: 100 500;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Kai";
+  src: local("LXGWWenKai-Bold"), local("LXGW WenKai Bold"),
+       local("STKaitiSC-Black"), local("Kaiti SC Black");
+  font-weight: 600 900;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Kai Fallback";
+  src: local("LXGWWenKaiScreen"), local("LXGW WenKai Screen"),
+       local("LXGWWenKai-Regular"), local("LXGW WenKai"), local("LXGW WenKai Regular"),
+       local("KaiTi"), local("SimKai"), local("STKaiti"),
+       local("AR PL UKai CN"), local("FandolKai-Regular");
+  font-weight: 400;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Serif";
+  src: local("Noto Serif CJK SC Medium"), local("NotoSerifCJKsc-Medium"),
+       local("Source Han Serif SC Medium"), local("SourceHanSerifSC-Medium"),
+       local("Noto Serif SC Medium"), local("NotoSerifSC-Medium"),
+       local("Noto Serif CJK SC"), local("NotoSerifCJKsc-Regular"),
+       local("Source Han Serif SC"), local("SourceHanSerifSC-Regular"),
+       local("Noto Serif SC"), local("NotoSerifSC-Regular"),
+       local("STSongti-SC-Regular"), local("Songti SC Regular");
+  font-weight: 100 500;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Serif";
+  src: local("Noto Serif CJK SC Bold"), local("NotoSerifCJKsc-Bold"),
+       local("Source Han Serif SC Bold"), local("SourceHanSerifSC-Bold"),
+       local("Noto Serif SC Bold"), local("NotoSerifSC-Bold"),
+       local("STSongti-SC-Bold"), local("Songti SC Bold");
+  font-weight: 600 900;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Serif Fallback";
+  src: local("SimSun"), local("NSimSun"),
+       local("AR PL UMing CN"), local("FandolSong-Regular");
+  font-weight: 400;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Kai TC";
+  src: local("LXGWWenKaiTC-Medium"), local("LXGW WenKai TC Medium"),
+       local("LXGWWenKaiMonoTC-Medium"), local("LXGW WenKai Mono TC Medium"),
+       local("STKaitiTC-Bold"), local("Kaiti TC Bold");
+  font-weight: 100 500;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Kai TC";
+  src: local("LXGWWenKaiTC-Bold"), local("LXGW WenKai TC Bold"),
+       local("LXGWWenKaiMonoTC-Bold"), local("LXGW WenKai Mono TC Bold"),
+       local("STKaitiTC-Black"), local("Kaiti TC Black");
+  font-weight: 600 900;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Kai TC Fallback";
+  src: local("LXGWWenKaiTC-Regular"), local("LXGW WenKai TC"), local("LXGW WenKai TC Regular"),
+       local("BiauKaiTC-Regular"), local("BiauKaiTC Regular"),
+       local("BiauKaiHK-Regular"), local("BiauKaiHK Regular"), local("BiauKai"),
+       local("DFKai-SB"), local("TW-Kai"),
+       local("AR PL UKai TW"), local("AR PL UKai HK");
+  font-weight: 400;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Serif TC";
+  src: local("Noto Serif CJK TC Medium"), local("NotoSerifCJKtc-Medium"),
+       local("Source Han Serif TC Medium"), local("SourceHanSerifTC-Medium"),
+       local("Noto Serif TC Medium"), local("NotoSerifTC-Medium"),
+       local("Noto Serif CJK TC"), local("NotoSerifCJKtc-Regular"),
+       local("Source Han Serif TC"), local("SourceHanSerifTC-Regular"),
+       local("Noto Serif TC"), local("NotoSerifTC-Regular"),
+       local("STSongti-TC-Regular"), local("Songti TC Regular");
+  font-weight: 100 500;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Serif TC";
+  src: local("Noto Serif CJK TC Bold"), local("NotoSerifCJKtc-Bold"),
+       local("Source Han Serif TC Bold"), local("SourceHanSerifTC-Bold"),
+       local("Noto Serif TC Bold"), local("NotoSerifTC-Bold"),
+       local("STSongti-TC-Bold"), local("Songti TC Bold");
+  font-weight: 600 900;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Serif TC Fallback";
+  src: local("PMingLiU"), local("MingLiU"),
+       local("LiSungLight"), local("Apple LiSung Light"),
+       local("AR PL UMing TW"), local("AR PL UMing HK");
+  font-weight: 400;
+  font-style: italic;
+  size-adjust: 106%;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+/* Japanese emphasis (--font-em under :lang(ja)) shifts Kana and Kanji from
+   body Gothic to paired upright Mincho at native 100% metrics (Hiragino, Yu and
+   Noto Mincho/Gothic share a ~92% glyph face, unlike Chinese KaiTi/SongTi),
+   again excluding full-width punctuation (U+3000-303F, U+30FB, U+FF00-FFEF).
+   An alternative convention on Japanese developer platforms (Zenn, Qiita) is
+   synthesized oblique (font-synthesis-style: auto, matching Korean); upright
+   Mincho is chosen here to avoid shearing dense Kanji strokes per JLREQ while
+   keeping the same architecture as Chinese (*...* = typeface voice shift,
+   [...]{.} = explicit emphasis marks). */
+@font-face {
+  font-family: "Chaos Mincho";
+  /* Yu Mincho ships in two cuts with different names: macOS's (Medium/Demibold,
+     "YuMin-Medium" / "YuMin-Demibold") and Windows' (Light/Regular/Demibold,
+     "YuMincho-Regular" / "YuMincho-Demibold", with localized Full Name ID 4 on
+     Japanese Windows). Pairing Full and PostScript names covers both. */
+  src: local("YuMin-Medium"), local("YuMincho Medium"),
+       local("Yu Mincho Medium"),
+       local("Yu Mincho Regular"), local("YuMincho-Regular"),
+       local("BIZUDPMincho-Medium"), local("BIZ UDPMincho Medium"),
+       local("BIZUDMincho-Medium"), local("BIZ UDMincho Medium"),
+       local("Noto Serif CJK JP Medium"), local("NotoSerifCJKjp-Medium"),
+       local("Source Han Serif Medium"), local("SourceHanSerif-Medium"),
+       local("Noto Serif JP Medium"), local("NotoSerifJP-Medium"),
+       local("Noto Serif CJK JP"), local("NotoSerifCJKjp-Regular"),
+       local("Source Han Serif"), local("SourceHanSerif-Regular"),
+       local("Noto Serif JP"), local("NotoSerifJP-Regular"),
+       local("HiraMinProN-W3"), local("Hiragino Mincho ProN W3");
+  font-weight: 100 500;
+  font-style: italic;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3040-30FA, U+30FC-30FF, U+31F0-31FF,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Mincho";
+  src: local("YuMin-Demibold"), local("YuMincho-Demibold"),
+       local("YuMincho Demibold"), local("Yu Mincho Demibold"),
+       local("YuMincho-Bold"), local("Yu Mincho Bold"),
+       local("BIZUDPMincho-Bold"), local("BIZ UDPMincho Bold"),
+       local("BIZUDMincho-Bold"), local("BIZ UDMincho Bold"),
+       local("Noto Serif CJK JP Bold"), local("NotoSerifCJKjp-Bold"),
+       local("Source Han Serif Bold"), local("SourceHanSerif-Bold"),
+       local("Noto Serif JP Bold"), local("NotoSerifJP-Bold"),
+       local("HiraMinProN-W6"), local("Hiragino Mincho ProN W6");
+  font-weight: 600 900;
+  font-style: italic;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3040-30FA, U+30FC-30FF, U+31F0-31FF,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+@font-face {
+  font-family: "Chaos Mincho Fallback";
+  src: local("BIZUDMincho-Regular"), local("BIZ UDMincho"),
+       local("MS PMincho"), local("MS Mincho"),
+       local("IPAexMincho"), local("IPAMincho");
+  font-weight: 400;
+  font-style: italic;
+  unicode-range: U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B,
+                 U+3040-30FA, U+30FC-30FF, U+31F0-31FF,
+                 U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-323AF;
+}
+
+/* Display KaiTi for copybook grids (p.mizige in prose.css).
+   Unlike body-size --font-em (~16px, which steps KaiTi up in weight and 106%
+   size-adjust to match surrounding sans-serif ink density), copybook cells sit
+   at ~44-54px where native Regular brush taper and 100% em-box proportions
+   belong. Each foundry's outlines sit on a different vertical em-box center
+   relative to its hhea table -- notably Apple's Kaiti.ttc (STKaitiSC/TC),
+   which pairs SinoType's [-200, +800] outlines (ink center +0.30em) with
+   PingFang's [+1060, -340] hhea (line-box midpoint +0.36em), pushing glyphs
+   ~0.06em below the horizontal crosshair. Separate family names with no
+   unicode-range exclusion keep U+0020 in the matched face so CSS Inline 3 uses
+   its ascent-override / descent-override directly as the cell's strut. */
+@font-face {
+  font-family: "Chaos Mizige WenKai";
+  src: local("LXGWWenKai-Regular"), local("LXGW WenKai"),
+       local("LXGW WenKai Regular"), local("LXGWWenKaiScreen"),
+       local("LXGW WenKai Screen");
+  font-weight: 400;
+  font-style: normal;
+  ascent-override: 88%;
+  descent-override: 12%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Chaos Mizige Kaiti";
+  src: local("STKaitiSC-Regular"), local("Kaiti SC Regular"),
+       local("STKaiti"), local("AR PL UKai CN"), local("FandolKai-Regular");
+  font-weight: 400;
+  font-style: normal;
+  ascent-override: 80%;
+  descent-override: 20%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Chaos Mizige SimKai";
+  src: local("KaiTi"), local("SimKai");
+  font-weight: 400;
+  font-style: normal;
+  ascent-override: 86%;
+  descent-override: 14%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Chaos Mizige Serif";
+  src: local("Noto Serif CJK SC"), local("NotoSerifCJKsc-Regular"),
+       local("Source Han Serif SC"), local("SourceHanSerifSC-Regular"),
+       local("Noto Serif SC"), local("NotoSerifSC-Regular");
+  font-weight: 400;
+  font-style: normal;
+  ascent-override: 88%;
+  descent-override: 12%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Chaos Mizige Songti";
+  src: local("STSongti-SC-Regular"), local("Songti SC Regular"),
+       local("SimSun"), local("NSimSun");
+  font-weight: 400;
+  font-style: normal;
+  ascent-override: 80%;
+  descent-override: 20%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Chaos Mizige WenKai TC";
+  src: local("LXGWWenKaiTC-Regular"), local("LXGW WenKai TC"),
+       local("LXGW WenKai TC Regular");
+  font-weight: 400;
+  font-style: normal;
+  ascent-override: 88%;
+  descent-override: 12%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Chaos Mizige BiauKai";
+  src: local("BiauKaiTC-Regular"), local("BiauKaiTC Regular"),
+       local("BiauKaiHK-Regular"), local("BiauKaiHK Regular"), local("BiauKai"),
+       local("DFKai-SB"), local("TW-Kai"),
+       local("AR PL UKai TW"), local("AR PL UKai HK");
+  font-weight: 400;
+  font-style: normal;
+  ascent-override: 85%;
+  descent-override: 15%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Chaos Mizige Kaiti TC";
+  src: local("STKaitiTC-Regular"), local("Kaiti TC Regular");
+  font-weight: 400;
+  font-style: normal;
+  ascent-override: 80%;
+  descent-override: 20%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Chaos Mizige JA";
+  src: local("YuKyokasho Yoko Medium"), local("YuKyokasho Medium"),
+       local("UD Digi Kyokasho N-R"), local("UDDigiKyokashoN-R"),
+       local("KleeOne-Regular"), local("Klee One"), local("Klee One Regular"),
+       local("HiraMinProN-W3"), local("Hiragino Mincho ProN W3"),
+       local("YuMin-Medium"), local("Yu Mincho Regular"), local("YuMincho-Regular"),
+       local("Noto Serif CJK JP"), local("NotoSerifCJKjp-Regular");
+  font-weight: 400;
+  font-style: normal;
+  ascent-override: 88%;
+  descent-override: 12%;
+  line-gap-override: 0%;
+}
+
+@layer chaos.tokens {
+  /* ==========================================================================
+     CSS VARIABLES
+     Global design tokens for colors, spacing, and typography.
+     Uses CSS custom properties for easy theme switching and maintenance.
+     ========================================================================== */
+
+  :root {
+    /* Color scheme - Tells browser to use native light UI for controls.
+       html.dark switches it to dark; the <meta name="color-scheme"> in
+       head.html only matters before this sheet applies, so a dark system
+       gets a dark canvas on first paint. */
+    color-scheme: light;
+
+    /* Color palette - Light mode
+       Traditional colours at their published values (和色大辞典,
+       colordic.org/w). A colour tuned away from its reference loses the
+       name: say what it was derived from instead. */
+    --bg: #FBFAF5;                    /* 生成り色 Kinari-iro (page background) */
+    --surface: #FFFFFF;               /* 白 Shiro (floating surfaces and input fields) */
+    --text: #2B2B2B;                  /* 黒 Kuro (body text, 13.5:1) */
+    --heading: #16160E;               /* 暗黒色 Ankoku-shoku (headings, 17.4:1) */
+    --muted: #595857;                 /* 墨 Sumi (secondary text, 6.8:1; 5.6:1 on --paper) */
+    --primary: #9E3D3F;               /* 蘇芳 Suō (primary brand color) */
+    --primary-hover: #6C2C2F;         /* 葡萄茶 Ebi-cha, the deeper red for hover */
+    --primary-fg: #FFFFFF;            /* Text on primary (6.6:1) */
+    --accent: #165E83;                /* 藍色 Ai-iro (accent color) */
+    --paper: #EDE4CD;                 /* 練色 Neri-iro (active and hover grounds) */
+
+    /* Links share the 藍 accent; dotted underlines identify prose links. */
+    --link: var(--accent);            /* Default link color */
+    --link-hover: #223A70;            /* 紺色 Kon-iro, 藍 dyed deeper */
+
+    /* UI elements - Borders and backgrounds */
+    --table-stripe: var(--ground);     /* Table rows carry prose, so they take the paper tint;
+                                          only code needs a neutral ground */
+    --blockquote-fg: var(--text);      /* Quotes are set smaller, not fainter */
+    --table-head-bg: var(--text);      /* Table header: inverted ink by day... */
+    --table-head-fg: var(--bg);
+    --ground: #F5F2EB;                 /* Quiet ground for borderless blocks and chrome: a
+                                          warm tint toward 練色, no traditional name of its
+                                          own. The tinted grounds share one tier, about 1.07
+                                          against --bg, where the standard pale colours below
+                                          fall; the hue carries the rest of the edge. */
+    --ground-head: #EEEAE0;            /* Header band of a block on --ground: the panel
+                                          labels and the X card's source row, like the
+                                          title slip on a book cover. The same warm tint a
+                                          step deeper, 1.15 against --bg, between --ground
+                                          and --paper; no traditional name of its own. */
+    --blockquote-bg: var(--ground);    /* Blockquote ground */
+    --border-color: rgba(0,0,0,0.1);     /* Border colour, for widths other than 1px */
+    --border: 1px solid var(--border-color); /* Subtle border for light mode */
+    --code-bg: #F0F0F0;                          /* Code block ground. Deliberately neutral:
+                                                    a warm tint reads as yellow cast behind
+                                                    syntax colours. A step above the tinted
+                                                    grounds (1.09 against --bg). */
+    --mark-bg: rgba(248, 181, 0, 0.25);          /* Text & search highlight (山吹色 Yamabuki) */
+
+    /* Callouts. The historical -border tokens colour the headings; keep them
+       legible as small text on their grounds. 月白 and 薄桜 set the ground
+       lightness and chroma; the others are tints matched to them, since the
+       standard pale greens, purples and 鳥の子色 are either off that tier or
+       noticeably more saturated. */
+    --alert-note-bg: #EAF4FC;          /* 月白 Geppaku */
+    --alert-note-border: var(--accent);  /* 藍色 Ai-iro */
+    --alert-tip-bg: #EBF5ED;           /* Tint of 千歳緑 */
+    --alert-tip-border: #316745;       /* 千歳緑 Chitose-midori */
+    --alert-important-bg: #FDF0E5;     /* Tint between 柿茶 and 鳥の子色 */
+    --alert-important-border: #954E2A; /* 柿茶 Kaki-cha */
+    --alert-warning-bg: #FDEFF2;       /* 薄桜 Usu-zakura */
+    --alert-warning-border: var(--primary); /* 蘇芳 Suō */
+    --alert-caution-bg: #F4F1FC;       /* Tint of 菖蒲色 */
+    --alert-caution-border: #674196;   /* 菖蒲色 Shōbu-iro */
+
+    /* Syntax highlighting: GitHub's roles, and hues near its Primer palette,
+       in traditional colours. syntax.css maps Chroma's token classes onto
+       these roles. Each ink clears 4.5:1 on --code-bg and on a highlighted
+       line; in dark mode the inks share one lightness band at lower chroma
+       than GitHub's, which is what keeps them from glaring. */
+    --syntax-text: var(--text);
+    --syntax-comment: var(--muted);    /* 墨 by day, an unnamed grey by night */
+    --syntax-keyword: #A73836;         /* 紅海老茶 Beni-ebicha */
+    --syntax-string: #192F60;          /* 紺青 Konjō */
+    --syntax-constant: #1E50A2;        /* 瑠璃色 Ruri-iro */
+    --syntax-function: #674196;        /* 菖蒲色 Shōbu-iro */
+    --syntax-variable: #783C1D;        /* 唐茶 Kara-cha */
+    --syntax-tag: #316745;             /* 千歳緑 Chitose-midori */
+    --syntax-line-hl: rgba(248, 181, 0, 0.25); /* 山吹色 Yamabuki, as <mark> */
+    --syntax-inserted-bg: var(--alert-tip-bg);
+    --syntax-deleted-bg: var(--alert-warning-bg);
+
+    /* Code line hover and interactive code variables (<var class="code-var">).
+       Text keeps its own ink so variables never collide with --syntax-* roles
+       or read as links; neutral grounds mark the hovered row and variable slot
+       on --code-bg, with --code-line-hover halfway to --code-var-bg so a
+       hovered row never swallows a variable inside it. */
+    --code-line-hover: #EAEAEA;        /* Neutral half-step below --code-bg (1.06:1 against --code-bg) */
+    --code-var-bg: #E6E6E6;            /* Neutral step below --code-bg (1.09:1 against --code-bg) */
+    --code-var-hover-bg: #DEDEDE;      /* Neutral deeper step on hover (1.17:1 against --code-bg; syntax inks >= 4.79:1) */
+    --code-var-border: color-mix(in srgb, var(--muted) 45%, transparent); /* Quiet ruled guide on --code-var-bg */
+    --code-var-hover-border: var(--muted); /* 墨 Sumi on hover (5.6:1 on --code-var-bg) */
+
+    /* Layout dimensions - Spacing and container widths */
+    --max-width: 1280px;               /* Maximum container width for header/footer/nav */
+    --content-width: 780px;            /* ~48 full-width CJK characters per line at 16px.
+                                          On the long side of the classical 30-40 range;
+                                          paired with the 1.7 line-height to stay readable. */
+    --gutter: 24px;                    /* Horizontal padding */
+    --nav-height: 80px;                /* Sticky navigation height for scroll offsets */
+    --radius-card: 8px;                /* Shared shape for content cards and panels */
+    --radius: var(--radius-card);      /* Compatibility alias */
+    --radius-sm: 4px;                  /* Small border radius */
+    --radius-md: 6px;                  /* Medium border radius */
+    --radius-lg: 8px;                  /* Large border radius */
+
+    /* Typography scale - Consistent font sizing system */
+    --font-size-base: 16px;            /* Base font size */
+    --line-height: 1.7;                /* Line height optimized for compact CJK reading texture */
+    --ruby-leading: 0.15;              /* Added to a block's leading when it holds ruby (prose.css) */
+    --h1-size: 28px;                   /* Article titles */
+    --h2-size: 22px;                   /* Section headings */
+    --h3-size: 18px;                   /* Sub-section headings */
+
+    /* UI type scale - every non-body size resolves to one of these five steps,
+       so components stop inventing half-pixel values of their own. */
+    --text-2xs: 11px;                  /* Badges, keycaps */
+    --text-xs: 12px;                   /* Dense secondary UI */
+    --text-sm: 13px;                   /* Sidebar rows, dates, footer */
+    --text-md: 14px;                   /* Default small text */
+    --text-lg: 15px;                   /* Slightly reduced body */
+    --small-size: var(--text-md);      /* Small text, captions */
+
+    /* Body sans-serif stack - Noto Sans SC first, with platform UI and CJK
+       sans-serif fallbacks. */
+    --font-sans: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+                 "WenQuanYi Micro Hei", sans-serif;
+
+    /* Monospace stack - used by code, taxonomy count pills and archive dates.
+       The bundled Noto Sans Mono face covers Latin and digits only; everything
+       else, CJK included, falls through to the platform fonts listed after it. */
+    --font-mono: "Noto Sans Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
+                 "Liberation Mono", monospace;
+
+    /* Emphasis stack - Han-scoped KaiTi and CJK serif @font-face families come
+       first so -apple-system / BlinkMacSystemFont cannot intercept ideographs
+       with PingFang on WebKit/Firefox; Latin/digits skip those unicode-ranges
+       and hit true italic system sans (before upright-only Noto Sans CJK),
+       while full-width CJK punctuation skips both and lands on body CJK
+       sans-serif with working halt/chws trimming. Sites that self-host a CJK
+       webfont can prepend it or override --font-em without restyling em. */
+    --font-em: "Chaos Kai", "Chaos Kai Fallback",
+               "Chaos Serif", "Chaos Serif Fallback",
+               -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Noto Sans", "Liberation Sans", "DejaVu Sans",
+               "Noto Sans SC", "PingFang SC", "Hiragino Sans GB",
+               "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+
+    /* Copybook grid stack & cinnabar rules (p.mizige in prose.css).
+       Derived from --primary (蘇芳 Suō by day, 退紅 Arazome by night) so dark
+       mode automatically shifts to a muted rose grid without glaring. */
+    --font-mizige: "Chaos Mizige WenKai", "Chaos Mizige Kaiti",
+                   "Chaos Mizige SimKai", "Chaos Mizige Serif",
+                   "Chaos Mizige Songti", var(--font-sans);
+    --mizige-border: color-mix(in srgb, var(--primary) 45%, transparent);
+    --mizige-guide: color-mix(in srgb, var(--primary) 26%, transparent);
+
+    /* Animation timing - Consistent transitions */
+    --transition-fast: 0.2s ease;      /* Quick transitions for hover/focus */
+    --transition-normal: 0.3s ease;    /* Standard transitions for UI elements */
+
+    /* Z-index layers - Consistent stacking context */
+    --z-nav: 40;                       /* Sticky navigation header */
+    --z-overlay: 50;                   /* Overlays (menu, TOC) */
+    --z-modal: 60;                     /* Floating buttons (TOC toggle) */
+    --z-top: 100;                      /* Top layer (skip link, announcements) */
+
+    /* Visible keyboard focus, separate from hover and selection (WCAG 2.4.7). */
+    --focus-outline: 2px solid var(--link); /* Blue in both modes; red stays with brand and warnings */
+    --focus-offset: 3px;
+
+    /* Elevation and shadows */
+    --shadow-dialog: 0 16px 36px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Locale-specific emphasis stacks so Traditional Chinese, Japanese and Korean
+     pages (or lang-tagged passages) never mix regional glyph forms. */
+  :is(:lang(zh-TW), :lang(zh-HK), :lang(zh-MO), :lang(zh-Hant)) {
+    --font-em: "Chaos Kai TC", "Chaos Kai TC Fallback",
+               "Chaos Serif TC", "Chaos Serif TC Fallback",
+               -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Noto Sans", "Liberation Sans", "DejaVu Sans",
+               "Noto Sans TC", "PingFang TC", "PingFang HK",
+               "Microsoft JhengHei", sans-serif;
+    --font-mizige: "Chaos Mizige WenKai TC", "Chaos Mizige BiauKai",
+                   "Chaos Mizige Kaiti TC", var(--font-sans);
+  }
+
+  :lang(ja) {
+    --font-em: "Chaos Mincho", "Chaos Mincho Fallback",
+               -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Noto Sans", "Liberation Sans", "DejaVu Sans",
+               "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+               "Yu Gothic", "Meiryo", sans-serif;
+    --font-mizige: "Chaos Mizige JA", var(--font-sans);
+  }
+
+  :lang(ko) {
+    --font-em: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Noto Sans", "Liberation Sans", "DejaVu Sans",
+               "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+               sans-serif;
+  }
+
+  /* Dark mode variables
+     Complete color palette override for dark theme.
+     Maintains visual hierarchy and accessibility in low-light conditions.
+     Applies to screen only - print always uses light theme standards. */
+  @media screen {
+    html.dark {
+      /* Color scheme - Tells browser to use native dark UI for controls */
+      color-scheme: dark;
+
+      --bg: #151514;                     /* Deep, calm warm charcoal; eliminates gray haze at night */
+      --surface: #1B1B19;                /* Floating surfaces and input fields */
+      --text: #CFCFCE;                   /* Unnamed grey, a step under the headings (11.7:1 on --bg) */
+      --heading: #DCDDDD;                /* 白鼠 Shiro-nezumi (13.4:1 on --bg) */
+      --muted: #989896;                  /* Muted secondary text (6.3:1 on --bg; 5.4:1 on --paper) */
+      --primary: #D69090;                /* 退紅 Arazome, the pale red to light mode's 蘇芳 */
+      --primary-hover: #D4ACAD;          /* 薄柿 Usugaki: lighter, less chroma */
+      --primary-fg: #151514;             /* Dark ink on the rose accent (matches --bg) */
+      --accent: #84B9CB;                 /* 浅縹 Asa-hanada, the pale 藍 dye to light mode's 藍色 (8.5:1) */
+      --paper: #252320;                  /* Active and hover grounds (warm charcoal) */
+      --link: var(--accent);             /* Same blue family as light mode */
+      --link-hover: #ABCED8;             /* 秘色色 Hisoku-iro: lighter, less chroma */
+      --ground: #1F1E1C;                 /* Warm charcoal, same tier as the alert grounds (~1.09) */
+      --ground-head: #292825;            /* A step above --ground and --paper (1.24), under the table header */
+      --table-head-bg: #2D2C28;          /* ...a raised warm charcoal by night, not a glaring
+                                            light bar: 1.31 against --bg, a step above the
+                                            stripes and --paper (unnamed) */
+      --table-head-fg: var(--heading);   /* 10.3:1 */
+      --border-color: rgba(255,255,255,0.08);
+      --border: 1px solid var(--border-color); /* Subtle dark border */
+      --code-bg: #1D1D1C;                /* Neutral, quiet dark ground (1.08:1 against --bg) */
+      --mark-bg: rgba(248, 181, 0, 0.16);  /* 山吹色 Yamabuki; stronger and muted text on it drops below AA */
+      --shadow-dialog: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+      /* Grounds sit at one tier (~1.09 against --bg) so no callout type
+         outweighs another or a quote. The inks are traditional colours of
+         matching lightness (OKLCH L 0.71-0.76), each the dark-mode kin of
+         its light-mode hue. */
+      --alert-note-bg: #171E26;
+      --alert-note-border: var(--accent);
+      --alert-tip-bg: #17201B;
+      --alert-tip-border: #93B69C;      /* 薄青 Usu-ao */
+      --alert-important-bg: #231D16;
+      --alert-important-border: #D8A373; /* 伽羅色 Kyara-iro */
+      --alert-warning-bg: #261B1E;
+      --alert-warning-border: var(--primary);
+      --alert-caution-bg: #211B26;
+      --alert-caution-border: #A59ACA;  /* 藤紫 Fuji-murasaki */
+
+      --syntax-keyword: #F2A0A1;         /* 紅梅色 Kōbai-iro */
+      --syntax-string: #83CCD2;          /* 白群 Byakugun */
+      --syntax-constant: #89C3EB;        /* 勿忘草色 Wasurenagusa-iro */
+      --syntax-function: #C0A2C7;        /* 薄葡萄 Usu-budō */
+      --syntax-variable: #DEB068;        /* 飴色 Ame-iro */
+      --syntax-tag: #A8C97F;             /* 柳色 Yanagi-iro */
+      --syntax-line-hl: rgba(248, 181, 0, 0.12); /* Weaker than light: comments on it keep AA */
+
+      --code-line-hover: #222221;        /* Neutral half-step above --code-bg (1.06:1 against --code-bg) */
+      --code-var-bg: #262626;            /* Neutral step above --code-bg (1.13:1 against --code-bg) */
+      --code-var-hover-bg: #2E2E2E;      /* Neutral deeper step on hover (1.26:1 against --code-bg; syntax inks >= 4.70:1) */
+    }
+  }
+
+  /* Mobile & Small Tablet breakpoint (<= 768px, screen only so A4/Letter
+     printable page widths ~680-703px in Blink do not inherit mobile tokens). */
+  @media screen and (max-width: 768px) {
+    :root {
+      --max-width: 100%;
+      --gutter: 16px;
+      --h1-size: 24px;
+      --h2-size: 20px;
+      --h3-size: 17px;
+    }
+  }
+}

@@ -1,0 +1,1545 @@
+/* ==========================================================================
+   PROSE
+   Everything the body of an article needs, shared by the site bundle and
+   the XSLT-rendered pages (the feed shows whole entries), so the two render
+   Markdown output from the same rules rather than from parallel copies.
+
+     chaos.base        Element defaults: element selectors and their
+                       states, the global focus ring and anchor offset.
+     chaos.components  The prose components Markdown renders: callouts,
+                       dialogue and the layout of highlighted code (colours: syntax.css).
+
+   Loaded right after tokens.css, which declares the layer order. Nesting
+   and breakpoints follow the conventions at the top of main.css.
+   ========================================================================== */
+
+@layer chaos.base {
+  /* ==========================================================================
+     BASE STYLES
+     Foundation styles for html and body elements.
+     Sets up font stack, smoothing, and Chinese typography features.
+     ========================================================================== */
+
+  html {
+    height: 100%;                      /* Full viewport height */
+    scroll-behavior: smooth;           /* Smooth scrolling for anchor links */
+    scrollbar-gutter: stable;          /* Prevent layout shift when scrollbars appear */
+
+    @media (prefers-reduced-motion: reduce) {
+      scroll-behavior: auto;           /* Instant scrolling for reduced motion */
+    }
+  }
+
+  body {
+    height: 100%;                      /* Full viewport height */
+
+    /* Font stack: Noto Sans SC for Chinese, with high quality CJK system font fallbacks */
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height);
+
+    /* Font smoothing for better rendering on macOS and WebKit browsers */
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+
+    /* Chinese text best practices - Modern CSS features for CJK typography
+       - text-autospace: Automatic spacing between CJK and Latin characters
+       - hanging-punctuation: Allow punctuation to hang outside margins
+       - overflow-wrap / word-break: Natural character-grid breaking without artificial phrase gaps */
+    text-autospace: normal;
+    hanging-punctuation: first allow-end last;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  /* ==========================================================================
+     TYPOGRAPHY
+     Text styling hierarchy including headings, paragraphs, links, and lists.
+     Optimized for readability in both English and Chinese.
+     ========================================================================== */
+
+  /* Headings - Shared styles for all heading levels */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--heading);
+    font-weight: 700;
+    line-height: 1.35;
+    text-wrap: balance;
+    text-align: start;
+  }
+
+  /* Heading spacing is set in em so it tracks the responsive size steps, and the
+     space above is deliberately far larger than the 1.15em gap between paragraphs:
+     with the previous px values a paragraph followed by an h3 was separated by
+     exactly as much air as two paragraphs, so the heading grouped with nothing. */
+
+  /* H1 - Page and article titles */
+  h1 {
+    font-size: var(--h1-size);
+    margin: 0.6em 0 0.4em;
+    letter-spacing: -0.01em;           /* Tighter spacing for large text */
+  }
+
+  /* H2 - Major section headings */
+  h2 {
+    font-size: var(--h2-size);
+    margin: 2em 0 0.5em;
+  }
+
+  /* H3 - Sub-section headings */
+  h3 {
+    font-size: var(--h3-size);
+    margin: 1.7em 0 0.4em;
+  }
+
+  /* H4-H6 - Previously unstyled, so they inherited the global margin reset and
+     sat flush against the surrounding text. */
+  h4,
+  h5,
+  h6 {
+    font-size: var(--font-size-base);
+    margin: 1.5em 0 0.4em;
+  }
+
+  /* Paragraphs - Body text with orphan/widow control for better typography */
+  p {
+    margin: 0 0 1.15em;
+    orphans: 2;                        /* Minimum 2 lines at bottom of column */
+    widows: 2;                         /* Minimum 2 lines at top of column */
+  }
+
+  /* Links - Dotted underline with smooth transition to solid on hover.
+     Here in the base layer, a link state loses to any component rule, so a
+     component that drops the underline need not drop it again for :hover. */
+  a {
+    color: var(--link);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--link);
+    transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+
+    &:hover {
+      color: var(--link-hover);
+      border-bottom-style: solid;
+      border-bottom-color: var(--link-hover);
+    }
+  }
+
+  /* Focus ring for keyboard navigation accessibility */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  summary:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-offset);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
+  /* High Contrast Mode support. Flat: the list above mixes specificities. */
+  @media (forced-colors: active) {
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    summary:focus-visible,
+    [tabindex]:not([tabindex="-1"]):focus-visible {
+      outline: 2px solid Highlight;
+    }
+
+    /* System colours drop the tinted grounds that are a quote's only edge. */
+    blockquote {
+      border: 1px solid CanvasText;
+    }
+  }
+
+  /* Anything that can be jumped to clears the sticky navigation: headings from
+     the TOC, the skip link's #main-content, footnotes and their back-links. */
+  [id] {
+    scroll-margin-top: var(--nav-height);
+  }
+
+  /* Blockquotes - a card on the quiet ground, no rail. Callouts are
+     blockquotes too and take their shape from here.
+     Ahead of the lists below on purpose: on mobile a nested list inside a quote
+     takes the nested-list indent, which needs `ul ul` to come after
+     `blockquote ul` (the two tie on specificity). */
+  blockquote {
+    margin: 1.5em 0;
+    padding: 1em 1.25em;
+    background: var(--blockquote-bg);
+    border-radius: var(--radius-card);
+    color: var(--blockquote-fg);
+    font-size: 0.95em;
+    text-align: start;                 /* Narrower measure than body; avoid justify rivers */
+
+    > :first-child {
+      margin-top: 0;
+    }
+
+    > :last-child {
+      margin-bottom: 0;
+    }
+
+    /* Lists inside a card indent, so markers cannot hang off its edge */
+    ol,
+    ul {
+      padding-left: 1.5em;
+    }
+  }
+
+  /* Definition lists - Stacked term and indented definition for glossaries,
+     CLI flags and parameter lists, where a term may be a full signature.
+     Dialogues opt into the two-column script layout via .dialogue below.
+     Ahead of the lists below for the same reason as blockquote above: `dd ul`
+     ties `ul ul` on specificity, so nested lists on mobile keep `ul ul`. */
+  dl {
+    margin: 1.15em 0;
+    text-align: start;
+  }
+
+  dt {
+    margin-top: 0.85em;
+    font-weight: 600;
+    color: var(--heading);
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    dt + & {
+      margin-top: 0.15em;
+    }
+  }
+
+  dd {
+    margin-top: 0.2em;
+    padding-left: 1.5em;
+
+    @media screen and (max-width: 768px) {
+      padding-left: 1.2em;
+    }
+
+    & + dd {
+      margin-top: 0.65em;
+    }
+
+    > :first-child {
+      margin-top: 0;
+    }
+
+    > :last-child {
+      margin-bottom: 0;
+    }
+
+    ol,
+    ul {
+      padding-left: 1.5em;
+    }
+  }
+
+  /* Lists - Hanging indent: list markers appear in the margin, text is flush with paragraph measure */
+  ul,
+  ol {
+    margin: 1em 0;                      /* Consistent spacing before and after lists */
+    font-variant-numeric: tabular-nums; /* Consistent number width */
+    padding-left: 0;
+    /* Deliberately ragged-right even when article.post is justified on desktop:
+       1. List items are mostly short (often <1 or 1-2 lines), so their right edge
+          is naturally staggered and never forms a continuous block edge anyway.
+       2. Technical lists concentrate medium-length flags, camelCase names and
+          code tokens without delimiter break points (or below the 16-char <wbr>
+          threshold); justifying line 1 stretches CJK character spacing right
+          above a tight final line 2.
+       3. Nested lists indent inward and do not share the full body measure. */
+    text-align: start;
+
+    /* Lists on mobile - Indent safely to prevent markers from clipping at the screen edge */
+    @media screen and (max-width: 768px) {
+      padding-left: 1.4em;
+    }
+
+    &::marker {
+      color: var(--muted);              /* Subtle marker tone for classical print feel */
+    }
+  }
+
+  /* Nested lists: indent child items to preserve visual hierarchy */
+  ul ul,
+  ul ol,
+  ol ul,
+  ol ol {
+    padding-left: 1.5em;
+    margin: 0.3em 0;
+
+    @media screen and (max-width: 768px) {
+      padding-left: 1.2em;
+    }
+  }
+
+  /* ==========================================================================
+     TABLES
+     Responsive table styling with striped rows and a strong header row.
+     ========================================================================== */
+
+  table {
+    width: 100%;
+    margin: 1em 0;
+    font-variant-numeric: tabular-nums; /* Columns of figures must align */
+
+    /* Table cells - Consistent padding and borders */
+    th,
+    td {
+      border-bottom: var(--border);
+      padding: 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    /* Table header - Inverted in light mode, raised in dark (see tokens.css) */
+    thead th {
+      border-bottom: 2px solid var(--border-color);
+      vertical-align: bottom;
+      background-color: var(--table-head-bg);
+      color: var(--table-head-fg);
+      white-space: nowrap;
+    }
+
+    /* Multiple table bodies - Visual separator */
+    tbody + tbody {
+      border-top: 2px solid var(--border-color);
+    }
+
+    /* Striped rows - Zebra striping for easier row scanning */
+    tbody tr:nth-of-type(even) {
+      background-color: var(--table-stripe);
+    }
+  }
+
+  /* ==========================================================================
+     CODE
+     ========================================================================== */
+
+  /* Code elements share the monospace stack. Declaring the family explicitly
+     also cancels the UA monospace quirk, which otherwise renders code a few
+     pixels smaller than the surrounding CJK text. */
+  pre,
+  code,
+  kbd,
+  samp {
+    font-family: var(--font-mono);
+  }
+
+  /* Code blocks: a square, neutral, scrollable slab in a smaller size */
+  pre {
+    margin: 1.5em 0;
+    padding: 12px;
+    background: var(--code-bg);
+    overflow-x: auto;
+    font-size: var(--small-size);
+    /* article.post justifies its prose; a soft-wrapped block ({.wrap}) would
+       otherwise stretch the spaces of every wrapped row */
+    text-align: start;
+    /* Disable prose CJK spacing/punctuation trimming inside monospace slabs */
+    hanging-punctuation: none;
+    text-autospace: no-autospace;
+    text-spacing-trim: space-all;
+    font-feature-settings: normal;
+  }
+
+  /* Inline code - no backdrop of its own: the monospace face already separates
+     it from running CJK text, and a tint would only add noise mid-paragraph.
+     The block-level background on .highlight stays, since a block is its own
+     unit. Size is an optical adjustment (mono x-height runs large next to CJK),
+     set in em so it tracks its context: body, heading or list item. */
+  code,
+  kbd,
+  samp {
+    font-size: 0.9em;
+    overflow-wrap: break-word;
+    hyphens: none;                      /* Never insert hyphens into code identifiers */
+    text-emphasis: none;                /* Never inherit emphasis dots/sesame into code */
+  }
+
+  /* Code inside a block inherits the block's size, not the inline adjustment */
+  pre code {
+    font-size: inherit;
+    overflow-wrap: normal;
+  }
+
+  /* ==========================================================================
+     TIMESTAMPS
+     Dates and times share the monospace stack, so the digits line up from
+     one row to the next. Every page shows a date, so this makes Noto Sans
+     Mono a base resource rather than an on-demand one (head/css.html
+     preloads it).
+     ========================================================================== */
+
+  time {
+    font-family: var(--font-mono);
+  }
+
+  /* ==========================================================================
+     CHINESE TYPOGRAPHY
+     Inline emphasis, ruby annotations (phonetic guides) and highlighted text.
+     ========================================================================== */
+
+  /* Emphasis and alternate voice - True italic for Latin (UA default
+     font-style: italic), upright KaiTi/serif for Chinese and upright Mincho
+     for Japanese without mechanical faux-italic shear. line-height: 1 keeps
+     size-adjusted CJK glyphs from nudging the parent paragraph's line box.
+
+     Locale trade-offs when KaiTi is absent (Japanese and Korean):
+     - Japanese uses upright Mincho ("Chaos Mincho" in tokens.css) for Kana +
+       Kanji inside em/i, and reserves 傍点 (sesame over right) for explicit
+       [text]{.} (.em-dot:lang(ja) below). Two alternatives were rejected or
+       left opt-in:
+         1. Blanket text-emphasis: sesame on em:lang(ja) marks every English
+            letter inside Markdown *italic* (Goldmark emits em for all *...*
+            and CSS text-emphasis has no unicode-range) and collides in tight
+            1.35 line-height headings.
+         2. Synthesized oblique (font-synthesis-style: auto, common on Japanese
+            developer sites such as Zenn/Qiita where *...* is read as oblique)
+            avoids English sesame pollution, and sites preferring that web
+            convention can opt in via `:is(em, i):lang(ja) { font-synthesis-style: auto; }`,
+            but upright Mincho is the default here because it preserves stroke
+            integrity on dense Kanji per JLREQ and matches the Chinese design.
+     - Korean uses synthesized oblique (font-synthesis-style: auto): Korean
+       typesetting (KLREQ) accepts slanted Hangul for emphasis, and Hangul's
+       geometric strokes shear cleanly without the distortion seen in Kanji. */
+  em,
+  i {
+    font-family: var(--font-em);
+    font-synthesis-style: none;
+    line-height: 1;
+  }
+
+  :is(em, i):lang(ko) {
+    font-synthesis-style: auto;
+  }
+
+  /* Ruby annotations - Phonetic notation marks
+     Used for showing pronunciation above Chinese characters */
+  ruby {
+    ruby-position: over;               /* Position annotations above base text */
+    font-variant-east-asian: ruby;
+  }
+
+  /* Ruby text - The small pronunciation guide */
+  rt {
+    font-size: 0.55em;
+    line-height: 1;
+    margin-bottom: -0.1em;
+    color: var(--muted);
+    font-weight: normal;
+    letter-spacing: 0.05em;
+    padding: 0 0.1em;
+    text-emphasis: none;               /* Never draw emphasis marks on ruby glosses */
+  }
+
+  /* Give blocks that contain ruby annotations slightly taller uniform leading
+     so a single annotated line does not open a noticeably wider gap above it.
+     Added to the block's own leading rather than fixed, so print's tighter
+     --line-height carries through. A component that sets its own leading
+     declares it as --leading and repeats this under &:has(ruby), since its
+     layer outranks this one (p.stage, dl.bilingual dd). A list item counts
+     only its own text, not a nested list's. */
+  :is(p, dd):has(ruby),
+  li:has(> ruby, > :not(ul, ol) ruby) {
+    line-height: calc(var(--leading, var(--line-height)) + var(--ruby-leading));
+  }
+
+  /* Highlighted text - search matches and marked text in content */
+  mark {
+    background: var(--mark-bg);
+    color: var(--heading);
+    padding: 0 3px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Subscripts and superscripts (including footnote markers) - Lock line-height
+     to 0 so inline markers never inflate the 1.7 CJK line box. */
+  sub,
+  sup {
+    font-size: 0.75em;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+
+  sup {
+    top: -0.45em;
+  }
+
+  sub {
+    bottom: -0.25em;
+  }
+
+  /* Proper-name underline (<u>) - Offset below CJK descenders */
+  u {
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: from-font;
+  }
+}
+
+@layer chaos.components {
+  /* Emphasis marks ([text]{.} in typeset-content.html) - Upright body type at
+     normal weight, decoupled from bold and italic. Each language puts the
+     marks where its own convention does, which is also the preferred
+     position CSS Text Decoration 3 lists for text-emphasis-position:
+     - Chinese 着重号: filled dots under the text (GB/T 15834; Taiwan's
+       標點符號手冊 likewise puts them under horizontal text).
+     - Japanese 傍点: sesame marks over the text (JLREQ).
+     - Korean 드러냄표: dots over the text; the Korean punctuation rules
+       (문장 부호 규정) place them above horizontal text. Filled dot is
+       kept as the shape, matching the ˙ of those rules.
+     "over right" also gives the right side in vertical text for ja and ko. */
+  .em-dot {
+    font-family: inherit;
+    font-style: normal;
+    line-height: inherit;
+    text-emphasis: filled dot;
+    text-emphasis-position: under;
+
+    &:is(:lang(ja), :lang(ko)) {
+      text-emphasis-position: over right;
+    }
+
+    &:lang(ja) {
+      text-emphasis-style: sesame;
+    }
+  }
+
+  /* Links draw their underline as a border-bottom at the bottom of the
+     inline box, and under-dots (Chinese only; Japanese and Korean marks sit
+     over the text) land on it. Padding moves the border below the dots,
+     whether the link sits inside .em-dot or wraps it.
+
+     Why 0.4em (and not larger):
+     - Without Noto Sans SC installed on Apple platforms, -apple-system (SFNS,
+       hhea descent -0.211em / -3.38px at 16px) sizes the inline box while
+       PingFang SC (hhea descent -0.340em / -5.44px, the deepest among common
+       CJK sans faces) places the under-dots (~9px below baseline). That pair
+       is already the worst-case gap: 0.25em (4px) overlapped in Chrome, while
+       0.4em (6.4px -> 9.78px below baseline) clears the dots cleanly.
+     - Inline vertical padding does not grow the 1.7 line box (27.2px at 16px).
+       When Noto Sans SC (first in body's font stack, hhea descent -0.288em /
+       -4.61px) IS installed, the inline box itself starts 1.23px deeper while
+       its dots sit higher than PingFang's: 0.5em (8px) + 1px border reaches
+       13.61px below Line 1's baseline (13.59px above Line 2's), grazing or
+       overlapping Line 2's CJK glyph tops (~13.8px regular, ~14.6px 106%
+       KaiTi). Keeping 0.4em preserves ~2px of inter-line clearance across
+       both stacks. */
+  .em-dot:not(:lang(ja), :lang(ko)) a,
+  a:has(.em-dot:not(:lang(ja), :lang(ko))) {
+    padding-bottom: 0.4em;
+  }
+
+  /* ==========================================================================
+     INLINE COLOR SWATCHES
+     Small square preview chips emitted by `typeset-content.html` for
+     `[label]{#hex}` (a `.color-swatch` wrapping a chip and the label) and
+     `[]{#hex}` (a bare chip). Only the chip takes `--swatch`, leaving the
+     label in the surrounding ink; a checkerboard drawn from the text color
+     shows through alpha hex values, and a hairline border separates
+     near-ground swatches from both light and dark surfaces.
+     ========================================================================== */
+
+  .color-swatch-chip {
+    text-emphasis: none;
+
+    &::before {
+      content: "";
+      display: inline-block;
+      box-sizing: border-box;
+      width: 0.8em;
+      height: 0.8em;
+      margin-inline: 0.12em 0.25em;
+      vertical-align: -0.09em;
+      border-radius: 2px;
+      border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+      background:
+        linear-gradient(var(--swatch), var(--swatch)),
+        repeating-conic-gradient(color-mix(in srgb, currentColor 20%, transparent) 0 25%, transparent 0 50%) 0 0 / 6px 6px;
+      text-emphasis: none;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    @media (forced-colors: active) {
+      &::before {
+        forced-color-adjust: none;
+        border-color: CanvasText;
+      }
+    }
+  }
+
+  /* Blink breaks after an atomic inline-block even across U+2060, so
+     `typeset-content.html` wraps each chip with its opening unit (or bare
+     following token) in `.color-swatch-bind` while letting long labels wrap. */
+  .color-swatch-bind {
+    white-space: nowrap;
+  }
+
+  /* A chip moved inside long inline code (`[]{#165E83}` before a 16+
+     character `code`) would shrink with the code's 0.9em; scale it back so
+     it matches the chips in the surrounding prose. */
+  code > .color-swatch-bind > .color-swatch-chip {
+    font-size: calc(1em / 0.9);
+  }
+
+  /* ==========================================================================
+     MIZIGE (COPYBOOK CHARACTER GRID)
+     Markdown paragraph with `{.mizige}`, transformed by `typeset-content.html`
+     into per-character cinnabar `米字格` cells with upright sans-serif ruby
+     glosses centered above each cell (or spanning multi-character compounds).
+     Positioned like display math (`$$...$$`) so surrounding explanations stay
+     in normal justified body paragraphs.
+     ========================================================================== */
+
+  p.mizige {
+    --mizige-cell: calc(var(--font-size-base) * 4.5);
+    --mizige-gap: calc(var(--font-size-base) * 0.55);
+    --mizige-row-gap: calc(var(--font-size-base) * 0.9);
+    --mizige-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 50H0M50 50H100M50 50V0M50 50V100M50 50L0 0M50 50L100 100M50 50L100 0M50 50L0 100' fill='none' stroke='black' stroke-width='1' stroke-dasharray='4 3.5' stroke-dashoffset='2' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-end;
+    row-gap: var(--mizige-row-gap);
+    column-gap: calc(var(--mizige-cell) * 0.4 + var(--mizige-gap));
+    margin: 1.85em 0 1.45em;
+    line-height: 1;
+    text-align: center;
+    hanging-punctuation: none;
+    text-autospace: no-autospace;
+    text-spacing-trim: space-all;
+    font-feature-settings: normal;
+
+    /* Reserve room between side-by-side clauses for the zero-width hanging
+       punctuation; when clauses wrap onto separate rows, flex `column-gap`
+       disappears so stacked 4-character rows share the exact same width and
+       align column-for-column on the center axis. `.mizige-hang-N` is the
+       most marks meeting at any one clause boundary (`，` = 1, `」，` or
+       `，「` = 2, `」，「` = 3), counted by typeset-content.html: telling
+       those boundaries apart here would need :has() nested in :has(), which
+       Selectors 4 forbids and browsers drop. Each halt-trimmed mark is about
+       0.25 cell plus 0.1 cell padding per side; the steps leave some slack. */
+    &.mizige-hang-1 {
+      column-gap: calc(var(--mizige-cell) * 0.55 + var(--mizige-gap));
+    }
+
+    &.mizige-hang-2 {
+      column-gap: calc(var(--mizige-cell) * 0.95 + var(--mizige-gap));
+    }
+
+    &.mizige-hang-3 {
+      column-gap: calc(var(--mizige-cell) * 1.25 + var(--mizige-gap));
+    }
+
+    .mizige-sep {
+      display: none;
+    }
+
+    sup {
+      vertical-align: top;
+      top: 0.35em;
+      margin-left: 0.15em;
+    }
+
+    @media screen and (max-width: 768px) {
+      --mizige-cell: calc(var(--font-size-base) * 3.75);
+      --mizige-gap: calc(var(--font-size-base) * 0.45);
+    }
+
+    @media screen and (max-width: 380px) {
+      --mizige-cell: calc(var(--font-size-base) * 3.35);
+      --mizige-gap: calc(var(--font-size-base) * 0.4);
+    }
+
+    /* Changing <ruby> from `display: ruby` to `inline-flex` bypasses UA rules
+       that only hide <rp> inside `display: ruby` boxes. */
+    rp {
+      display: none;
+    }
+
+    rt {
+      display: block;
+      margin-bottom: 0.35rem;
+      padding: 0 0.15em;
+      font-family: var(--font-sans);
+      font-size: var(--text-lg);
+      font-style: normal;
+      font-weight: 400;
+      line-height: 1.25;
+      letter-spacing: 0.02em;
+      text-indent: 0.02em;             /* Balance trailing letter-spacing on centered labels */
+      color: var(--muted);
+      white-space: nowrap;
+      -webkit-user-select: none;
+      user-select: none;
+
+      @media screen and (max-width: 768px) {
+        font-size: var(--text-md);
+        margin-bottom: 0.3rem;
+      }
+    }
+
+    /* Clause wrapper: keeps each punctuated clause intact until it exceeds the
+       row, so `天地玄黄，宇宙洪荒` breaks after `，` (4+4) instead of mid-clause
+       (6+2); if a single unpunctuated clause itself overflows, `text-wrap:
+       balance` equalizes its wrapped lines over `<wbr>` break points. */
+    .mizige-clause {
+      max-width: 100%;
+      margin-top: calc(-1 * var(--mizige-row-gap));
+      margin-inline: calc(var(--mizige-gap) / -2);
+      text-align: center;
+      text-wrap: balance;
+    }
+
+    .mizige-tail {
+      white-space: nowrap;
+    }
+
+    .mizige-unit {
+      display: inline-flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      vertical-align: bottom;
+      min-width: var(--mizige-cell);
+      margin-top: var(--mizige-row-gap);
+      margin-inline: calc(var(--mizige-gap) / 2);
+    }
+
+    .mizige-base {
+      display: inline-flex;
+      gap: var(--mizige-gap);
+    }
+
+    .mizige-char {
+      position: relative;
+      isolation: isolate;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      width: var(--mizige-cell);
+      height: var(--mizige-cell);
+      border: 1px solid var(--mizige-border);
+      /* Copybook golden ratio ("字占格七成半"): 74% em-box places ~82-90% KaiTi
+         outlines comfortably inside the frame with ~15% margin on all sides. */
+      font-family: var(--font-mizige);
+      font-size: calc(var(--mizige-cell) * 0.74);
+      font-weight: 400;
+      font-style: normal;
+      font-synthesis: none;
+      line-height: 1;
+      color: var(--heading);
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+
+      &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background-color: var(--mizige-guide);
+        -webkit-mask-image: var(--mizige-svg);
+        mask-image: var(--mizige-svg);
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+
+        @media (forced-colors: active) {
+          forced-color-adjust: none;
+          background-color: GrayText;
+        }
+      }
+
+      @media (forced-colors: active) {
+        border-color: CanvasText;
+      }
+    }
+
+    .mizige-punct {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      vertical-align: bottom;
+      width: 0;
+      height: var(--mizige-cell);
+      overflow: visible;
+      padding-left: 0.2em;
+      /* Body CJK sans-serif rather than KaiTi (which lacks OpenType halt/chws
+         tables; see tokens.css), so consecutive marks such as `」，` set
+         half-width instead of overflowing into the next cell or mobile edge.
+         `halt` does the trimming, unconditionally per glyph; text-spacing-trim
+         is left at the paragraph's `space-all` because `trim-both` (the value
+         that would trim both ends of a run) is unsupported in Chrome 157 and
+         dropped, and the supported values only act at line starts or between
+         adjacent pairs, which `halt` already covers. */
+      font-family: var(--font-sans);
+      font-size: calc(var(--mizige-cell) * 0.5);
+      line-height: 1;
+      color: var(--muted);
+      font-feature-settings: "halt" 1;
+      white-space: nowrap;
+
+      &.mizige-punct-open {
+        justify-content: flex-end;
+        padding-left: 0;
+        padding-right: 0.2em;
+      }
+    }
+  }
+
+  /* ==========================================================================
+     QUOTE CARDS
+     Epigraph / standalone quote card with right-aligned attribution.
+     render-blockquote.html marks the attribution: a last paragraph that
+     opens with a dash, so a closing paragraph of the quote is not taken
+     for one by position alone.
+     ========================================================================== */
+
+  blockquote.quote {
+    padding: 1.25em 1.5em;
+    font-size: 1.05em;
+
+    > p.quote-by {
+      margin-top: 0.75em;
+      color: var(--muted);
+      font-size: 0.85em;
+      text-align: end;
+    }
+  }
+
+  /* ==========================================================================
+     CALLOUTS
+     GitHub-style alerts, rendered as blockquote.alert by render-blockquote.html,
+     so the blockquote card in chaos.base gives them their shape. Each type
+     sets its tint and the colour of its labelled heading; the label and icon
+     carry the meaning, not the colour alone.
+     ========================================================================== */
+
+  .alert {
+    font-size: var(--font-size-base);  /* Body size: a callout is not a quotation */
+    contain: layout style;             /* Optimize rendering performance */
+
+    .alert-heading {
+      margin-bottom: 0.4em;
+      font-weight: 600;
+      color: var(--alert-accent, var(--heading));
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .alert-note,
+  .alert-historical {
+    --alert-accent: var(--alert-note-border);
+    background: var(--alert-note-bg);
+  }
+
+  .alert-tip {
+    --alert-accent: var(--alert-tip-border);
+    background: var(--alert-tip-bg);
+  }
+
+  .alert-important {
+    --alert-accent: var(--alert-important-border);
+    background: var(--alert-important-bg);
+  }
+
+  .alert-warning,
+  .alert-disclaimer {
+    --alert-accent: var(--alert-warning-border);
+    background: var(--alert-warning-bg);
+  }
+
+  .alert-caution {
+    --alert-accent: var(--alert-caution-border);
+    background: var(--alert-caution-bg);
+  }
+
+  /* ==========================================================================
+     DIALOGUE
+     Markdown definition list with `{.dialogue}`: monochrome editorial layout
+     following Japanese taidan/zadankai (対談・座談会) and gikyoku (戯曲) print
+     traditions.
+     - Default (`.dialogue`): interview style — speaker names in `--heading`
+       semibold, right-aligned against a 1em gap before a clean vertical speech
+       axis (`折り返し頭揃え`), with tighter intra-turn spacing when one speaker
+       continues across multiple `<dd>` blocks.
+     - `.dialogue.script`: playscript / stage-cue style for placeholder labels
+       such as `p1`/`p2` — speaker codes step back into smaller `--muted` ink
+       so vocal emphasis inside the lines carries full typographic weight.
+     - Wide screens (`>= 960px`, outside `blockquote`) and print: hang the speaker
+       column into the left margin like list markers so dialogue lines stay
+       flush with surrounding prose (`main.css` reserves the print left gutter
+       on articles that contain `dl.dialogue`); narrower tablets keep the two
+       columns inside the measure; mobile stacks speaker above speech.
+     ========================================================================== */
+
+  dl.dialogue {
+    display: grid;
+    grid-template-columns: fit-content(7em) minmax(0, 1fr);
+    column-gap: 1em;
+
+    /* Compress margins between consecutive dialogue blocks so margin collapse
+       does not fall back to the 1.15em default `dl` margin. */
+    &:has(+ dl.dialogue) {
+      margin-bottom: 0.8rem;
+    }
+
+    &:has(+ dl.dialogue.script) {
+      margin-bottom: 0.55rem;
+    }
+
+    & + & {
+      margin-top: 0.8rem;
+    }
+
+    @media print, screen and (min-width: 960px) {
+      & {
+        --dialogue-hang: 5.5em;
+        --dialogue-gap: 1em;
+        margin-left: calc(-1 * (var(--dialogue-hang) + var(--dialogue-gap)));
+        grid-template-columns: var(--dialogue-hang) minmax(0, 1fr);
+        column-gap: var(--dialogue-gap);
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      display: block;
+    }
+
+    dt {
+      grid-column: 1;
+      justify-self: end;
+      align-self: baseline;
+      margin-top: 0.8rem;
+      color: var(--heading);
+      font-size: var(--text-lg);
+      font-weight: 600;
+      line-height: var(--line-height);
+      text-align: end;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: break-word;
+
+      &:first-child {
+        margin-top: 0;
+      }
+
+      &:has(+ dt),
+      dt + & {
+        line-height: 1.25;
+      }
+
+      dt + & {
+        margin-top: 0.1rem;
+      }
+
+      em {
+        display: block;
+        font-size: var(--text-xs);
+        font-weight: 400;
+        line-height: 1.35;
+        color: var(--muted);
+        /* Trim outer half-width space from opening/closing brackets at line
+           edges so short cues align crisply with the speaker name above, and
+           balance line lengths to avoid 1-2 character orphans. */
+        text-spacing-trim: trim-both;
+        font-feature-settings: "halt" 1;
+        text-wrap: balance;
+
+        @media screen and (max-width: 768px) {
+          display: inline;
+          text-spacing-trim: normal;
+          font-feature-settings: normal;
+          text-wrap: auto;
+        }
+      }
+
+      @media screen and (max-width: 768px) {
+        margin-top: 0.9rem;
+        text-align: start;
+
+        &:first-child {
+          margin-top: 0;
+        }
+      }
+    }
+
+    dd {
+      grid-column: 2;
+      align-self: baseline;
+      min-width: 0;
+      margin-top: 0.8rem;
+      padding-left: 0;
+
+      dt:first-child + & {
+        margin-top: 0;
+      }
+
+      dt + dt + & {
+        margin-top: 0.15rem;
+      }
+
+      dd + & {
+        margin-top: 0.4rem;
+      }
+
+      @media screen and (max-width: 768px) {
+        margin-top: 0.2rem;
+
+        dt:first-child + &,
+        dt + dt + & {
+          margin-top: 0.2rem;
+        }
+
+        dd + & {
+          margin-top: 0.45rem;
+        }
+      }
+    }
+
+    &.script {
+      &:has(+ dl.dialogue) {
+        margin-bottom: 0.55rem;
+      }
+
+      dl.dialogue + & {
+        margin-top: 0.55rem;
+      }
+
+      dt {
+        margin-top: 0.55rem;
+        color: var(--muted);
+        font-size: var(--text-sm);
+        font-weight: 500;
+        letter-spacing: 0.02em;
+
+        &:first-child {
+          margin-top: 0;
+        }
+
+        dt + & {
+          margin-top: 0.1rem;
+        }
+
+        @media screen and (max-width: 768px) {
+          margin-top: 0.7rem;
+
+          &:first-child {
+            margin-top: 0;
+          }
+        }
+      }
+
+      dd {
+        margin-top: 0.55rem;
+        text-align: start;
+
+        dt:first-child + & {
+          margin-top: 0;
+        }
+
+        dt + dt + & {
+          margin-top: 0.15rem;
+        }
+
+        dd + & {
+          margin-top: 0.35rem;
+        }
+
+        @media screen and (max-width: 768px) {
+          margin-top: 0.15rem;
+
+          dt:first-child + &,
+          dt + dt + & {
+            margin-top: 0.15rem;
+          }
+
+          dd + & {
+            margin-top: 0.4rem;
+          }
+        }
+      }
+    }
+  }
+
+  /* Parenthesised or tortoise-shell bracketed stage directions (`*（…）*`,
+     `*〔…〕*`), tagged by `typeset-content.html`. Inline cues (`em.stage`) and
+     short standalone stage paragraphs (`p.stage`) step back into smaller muted
+     ink, with tighter vertical rhythm when bridging `.script` blocks while
+     non-script metadata headers (`:not(.script)`) keep 1.5rem breathing room
+     before an opening stage paragraph. Long scene-setting paragraphs
+     (`p.stage.stage-scene`, 60+ chars or explicit `{.stage-scene}`) keep body
+     size and ink so multi-sentence opening descriptions stay comfortable. */
+  em.stage {
+    font-size: var(--text-sm);
+    color: var(--muted);
+  }
+
+  p.stage {
+    --leading: 1.75;
+    margin: 0.75rem 0;
+    line-height: var(--leading);
+
+    &:has(ruby) {
+      line-height: calc(var(--leading) + var(--ruby-leading));
+    }
+
+    + dl.dialogue {
+      margin-top: 0.75rem;
+    }
+
+    &.stage-scene em.stage {
+      font-size: inherit;
+      color: var(--text);
+    }
+  }
+
+  dl.dialogue.script:has(+ p.stage) {
+    margin-bottom: 0.75rem;
+  }
+
+  dl.dialogue:not(.script):has(+ p.stage) {
+    margin-bottom: 1.5rem;
+  }
+
+  /* Keep speaker labels inside quote and callout cards rather than hanging off
+     their left edge, matching `blockquote ul` in chaos.base. */
+  blockquote dl.dialogue {
+    margin-left: 0;
+    grid-template-columns: fit-content(7em) minmax(0, 1fr);
+  }
+
+  /* ==========================================================================
+     BILINGUAL
+     Markdown definition list with `{.bilingual}`: side-by-side parallel text
+     on desktop and print (`<dt>` left primary column, `<dd>` right reference
+     column), stacking as primary-above-reference on narrow viewports
+     (`<= 768px`).
+     Using `fit-content(N%) minmax(0, 1fr)` lets short-line poetry (such as
+     four-character verse) keep Column 2 snug at `column-gap` instead of leaving
+     a wide void, while full prose paragraphs expand up to the N% cap.
+     - Default (`.bilingual`): primary capped at `44%` (`~1 : 1.27`) with
+       reference stepped back (`0.9em`, `--muted`) so Chinese and English
+       heights balance.
+     - `.bilingual.even`: `50%` cap (`1 : 1` for long prose) and equal
+       typography.
+     - `.bilingual.wide-ref`: `38%` cap (`~1 : 1.63`) when `<dt>` holds short
+       glosses against long `<dd>` source passages.
+     ========================================================================== */
+
+  dl.bilingual {
+    --bilingual-cols: fit-content(44%) minmax(0, 1fr);
+    display: grid;
+    grid-template-columns: var(--bilingual-cols);
+    column-gap: 2rem;
+
+    &.even {
+      --bilingual-cols: fit-content(50%) minmax(0, 1fr);
+    }
+
+    &.wide-ref {
+      --bilingual-cols: fit-content(38%) minmax(0, 1fr);
+    }
+
+    & + & {
+      margin-top: 1rem;
+    }
+
+    @media screen and (max-width: 768px) {
+      display: block;
+    }
+
+    dt,
+    dd {
+      align-self: start;
+      min-width: 0;
+      margin-top: 1rem;
+      overflow-wrap: break-word;
+    }
+
+    dt {
+      grid-column: 1;
+      color: inherit;
+      font-weight: 400;
+      line-height: var(--line-height);
+
+      &:first-child {
+        margin-top: 0;
+      }
+
+      @media screen and (max-width: 768px) {
+        margin-top: 1.1rem;
+
+        &:first-child {
+          margin-top: 0;
+        }
+      }
+    }
+
+    dd {
+      grid-column: 2;
+      margin-left: 0;
+      padding-left: 0;
+      color: var(--muted);
+      font-size: 0.9em;
+      --leading: 1.65;
+      line-height: var(--leading);
+
+      &:has(ruby) {
+        line-height: calc(var(--leading) + var(--ruby-leading));
+      }
+
+      dt:first-child + & {
+        margin-top: 0;
+      }
+
+      dd + & {
+        margin-top: 0.5rem;
+      }
+
+      p {
+        margin: 0;
+
+        & + p {
+          margin-top: 0.5rem;
+        }
+      }
+
+      @media screen and (max-width: 768px) {
+        margin-top: 0.35rem;
+
+        dt:first-child + & {
+          margin-top: 0.35rem;
+        }
+
+        dd + & {
+          margin-top: 0.5rem;
+        }
+      }
+    }
+
+    &.even dd,
+    &.wide-ref dd {
+      color: inherit;
+      font-size: inherit;
+      --leading: var(--line-height);
+    }
+
+    &[data-select-col="dt"] dd,
+    &[data-select-col="dd"] dt {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+  }
+
+  /* ==========================================================================
+     MEDIA EMBEDS
+     Responsive 16:9 frame for embedded video players (`{{< youtube >}}`),
+     shared by article pages and the XSLT feed preview.
+     ========================================================================== */
+
+  .youtube-embed {
+    margin: 1.5em 0;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    background: var(--ground);
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+  }
+
+  /* ==========================================================================
+     HIGHLIGHTED CODE
+     Chroma's markup: the wrapper, line numbers and horizontal scroll. The
+     slab itself is the base pre above; colours are in syntax.css.
+     ========================================================================== */
+
+  /* The wrapper carries the block spacing, so consecutive blocks keep it,
+     and anchors the site's copy button. */
+  .highlight {
+    position: relative;
+    margin: 1.5em 0;
+
+    pre {
+      margin: 0;
+    }
+  }
+
+  /* Chroma structural styles - Layout for syntax highlighting components */
+  .chroma {
+    /* Line number links - The base link underline is a border */
+    .lnlinks {
+      border-bottom: none;
+      color: inherit;
+    }
+
+    /* Line number table cells - Reset spacing */
+    .lntd {
+      vertical-align: top;
+      padding: 0;
+      border: 0;
+    }
+
+    /* Line number table - Keep line numbers fixed while only the code column scrolls */
+    .lntable {
+      margin: 0;
+      display: block;
+      width: 100%;
+      max-width: none;
+
+      /* Hanging indent for line numbers on screens > 768px where there's space
+         Synchronized with list hanging indent breakpoint (769px) */
+      @media screen and (min-width: 769px) {
+        & {
+          margin: 0 0 0 -3em;            /* Shift left so line numbers hang in margin */
+          width: calc(100% + 3em);       /* Keep code column right edge flush with prose */
+        }
+      }
+
+      tbody {
+        display: block;
+      }
+
+      tr {
+        display: flex;
+      }
+
+      /* Brighter ink on the margin line number paired with the hovered code row
+         by modules/code-copy.js. */
+      @media screen and (hover: hover) {
+        .lnt:is(:hover, .is-hovered) {
+          color: var(--heading);
+        }
+      }
+    }
+
+    /* Line numbers - Unselectable with consistent spacing */
+    .lnt,
+    .ln {
+      white-space: pre;
+      -webkit-user-select: none;
+      user-select: none;
+      padding: 0 0 0 0.4em;
+    }
+
+    /* Inline line numbers (linenos=inline, or {.wrap} with anchorlinenos):
+       a fixed column with a gap before the text so wrapped rows hang clear */
+    .ln {
+      flex: none;
+      padding-inline-end: 1ch;
+    }
+
+    /* Line-number column: hangs in the page margin on wide screens, on the
+       page ground so the indent leaves no code-coloured strip; hidden on
+       narrow ones to keep the reading width. */
+    .lntd:first-child {
+      flex: 0 0 auto;
+
+      @media screen and (min-width: 769px) {
+        pre {
+          background: var(--bg);
+        }
+      }
+
+      @media screen and (max-width: 768px) {
+        display: none;
+      }
+    }
+
+    /* Code column: takes remaining width and lets its <pre> scroll horizontally */
+    .lntd:last-child {
+      flex: 1 1 0%;
+      min-width: 0;
+    }
+
+    /* Code lines - Flex layout with horizontal slab padding on each row so
+       highlighted (.hl) and hovered rows span the full scrollable width edge
+       to edge rather than stopping at the initial viewport or 12px short.
+       Screen only: in print the .highlight container supplies the padding. */
+    .line {
+      display: flex;
+
+      @media screen {
+        padding-inline: 12px;
+      }
+
+      /* Eye-tracking ruler across all Chroma blocks (leaving .hl's Yamabuki
+         ground intact); .is-hovered is added when .lntable pairs columns. */
+      @media screen and (hover: hover) {
+        &:not(.hl):is(:hover, .is-hovered) {
+          background-color: var(--code-line-hover);
+        }
+
+        &:hover > .ln {
+          color: var(--heading);
+        }
+      }
+    }
+  }
+
+  /* Code <pre>s whose rows carry their own horizontal padding above (leaving
+     the line-number column's <pre> and plain unhighlighted <pre>s untouched).
+     A browser without :has() (all below the Baseline floor) keeps the <pre>'s
+     12px as well, so code sits 24px in: wider, but still fully legible. */
+  @media screen {
+    pre.chroma:has(> code > .line) {
+      padding-inline: 0;
+
+      > code {
+        display: block;
+        width: max-content;
+        min-width: 100%;
+      }
+    }
+  }
+
+  /* Opt-in soft wrapping ({.wrap} on a fenced block): wraps long lines inside
+     the measure with a 2ch hanging continuation indent and a leading hook on
+     each continuation row, while keeping logical newlines intact for copy and
+     selection and tracking line numbers per logical row via a CSS counter. */
+  pre.wrap {
+    overflow-x: visible;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    code {
+      overflow-wrap: inherit;
+    }
+  }
+
+  .highlight.wrap {
+    --code-wrap-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7.5v4a3 3 0 0 0 3 3h5.5M8.8 11.8l2.7 2.7-2.7 2.7'/%3E%3C/svg%3E");
+
+    pre {
+      overflow-x: visible;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: var(--line-height);
+      line-height: round(calc(1em * var(--line-height)), 1px);
+
+      /* pre code resets overflow-wrap for scrolling blocks */
+      code {
+        overflow-wrap: inherit;
+      }
+    }
+
+    pre.chroma:has(> code > .line) > code {
+      width: auto;
+    }
+
+    .cl {
+      position: relative;
+      flex: 1 1 0%;
+      min-width: 0;
+      padding-inline-start: 2ch;
+      text-indent: -2ch;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 1lh;
+        bottom: 0;
+        inset-inline-start: 0;
+        width: 2ch;
+        background-color: var(--muted);
+        opacity: 0.6;
+        pointer-events: none;
+        mask: var(--code-wrap-icon) left 0 / 100% 1lh repeat-y;
+
+        /* The hook is painted as a masked background, which print drops by
+           default; keep it so paper shows where a line was wrapped. */
+        @media print {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        @media (forced-colors: active) {
+          background-color: GrayText;
+          opacity: 1;
+        }
+      }
+    }
+
+    @media screen and (hover: hover) {
+      .line:is(:hover, .is-hovered) .cl::before {
+        opacity: 0.95;
+      }
+    }
+
+    .lntable {
+      counter-reset: code-line var(--ln-start, 0);
+
+      @media screen and (min-width: 769px) {
+        & {
+          margin-left: 0;
+          width: 100%;
+        }
+      }
+
+      .lntd:first-child {
+        display: none;
+      }
+
+      @media screen and (min-width: 769px) {
+        .line {
+          position: relative;
+
+          &::before {
+            counter-increment: code-line;
+            /* Empty alt text keeps the numbers out of the accessibility tree,
+               as aria-hidden does for the unwrapped column. The plain
+               declaration is the fallback for Safari below 17.4 and Firefox
+               below 128. */
+            content: counter(code-line);
+            content: counter(code-line) / "";
+            position: absolute;
+            right: calc(100% + 12px);
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+          }
+
+          @media (hover: hover) {
+            &:is(:hover, .is-hovered)::before {
+              color: var(--heading);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @media screen and (min-width: 769px) {
+    blockquote .highlight.wrap:has(.lntable) {
+      margin-left: 2em;
+    }
+  }
+}

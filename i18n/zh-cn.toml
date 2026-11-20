@@ -1,0 +1,173 @@
+home = '首页'
+posts = '所有文章'
+categories = '分类'
+tags = '标签'
+series = '系列'
+caution = '小心'
+disclaimer = '免责声明'
+important = '重要'
+note = '注意'
+tip = '友情提示'
+warning = '警告'
+historical = '历史文件已不具备现实意义'
+archives = '归档'
+
+# Navigation
+skipToContent = '跳转到主要内容'
+mainNavigation = '主导航'
+atomFeed = 'Atom订阅'
+themeToggle = '切换浅/深色模式'
+themeLightMode = '已启用浅色模式'
+themeDarkMode = '已启用深色模式'
+themeAutoMode = '已启用跟随系统模式'
+menuToggle = '切换菜单'
+tableOfContents = '目录'
+tocToggle = '切换目录'
+
+# Pagination
+paginationLabel = '分页导航'
+previousPage = '← 上一页'
+nextPage = '下一页 →'
+
+# Post summary
+readMore = '阅读全文…'
+joinDiscussion = ''
+
+# Reading stats
+readingStats = '本文约{{ .WordCount }}字，阅读大致需要{{ .ReadingTime }}分钟'
+readingStatsParen = '（{{ .Stats }}）'
+
+# Print references
+printReferences = '注释'
+
+# Print permalink: the caption of the QR code; the second form is used when
+# comments are enabled
+printPermalink = '在线阅读本文'
+printPermalinkDiscuss = '在线阅读本文并参与讨论'
+
+# Footer
+poweredBy = '本站使用<a href="https://gohugo.io">Hugo</a>构建，主题为<a href="https://github.com/delphij/chaos-theme">Chaos</a>。'
+remarkAttribution = '评论系统采用<a href="https://remark42.com/">Remark42</a>。'
+
+# Theme toggle, feeds and post navigation
+feedLabel = 'RSS'
+themeToggleToDark = '切换到深色模式'
+themeToggleToLight = '切换到浅色模式'
+themeToggleToAuto = '切换到跟随系统'
+readMoreAbout = '阅读全文：{{ .Title }}'
+joinDiscussionAbout = '参与评论：{{ .Title }}'
+newerPost = '← {{ .Title }}'
+olderPost = '{{ .Title }} →'
+newerPostLabel = '较新文章：{{ .Title }}'
+olderPostLabel = '较早文章：{{ .Title }}'
+
+# Sidebar navigation
+browsingGuide = '浏览导引'
+coreCategories = '核心分类'
+popularTags = '热门标签'
+tagsOverview = '标签速览'
+tagsAlphabetNav = '标签字母导航'
+alphabetIndex = '字母快速索引'
+allTagsAZ = '全部标签（A-Z）'
+allCategoriesLink = '全部分类（{{ .Count }}）→'
+allTagsLink = '全部标签（{{ .Count }}）→'
+categoryTitle = '分类：{{ .Name }}'
+tagTitle = '标签：{{ .Name }}'
+seriesTitle = '系列：{{ .Name }}'
+seriesPrev = '上一篇：{{ .Title }}'
+seriesNext = '下一篇：{{ .Title }}'
+seriesPrevLabel = '系列上一篇：{{ .Title }}'
+seriesNextLabel = '系列下一篇：{{ .Title }}'
+
+# Archives
+archivesYearNav = '归档年份导航'
+yearQuickJump = '年份快速直达'
+yearLabel = '{{ .Year }}年'
+
+# Atom feed stylesheet
+visitBlogHome = '← 访问博客首页'
+feedPageTitle = 'Web Feed（Atom订阅源）'
+feedIntro = '这是一个<strong>Atom</strong>格式的网站订阅源。如果您使用的是支持RSS/Atom的浏览器或扩展，可以直接在此查看文章预览。'
+rssFeedPageTitle = 'Web Feed（RSS订阅源）'
+rssFeedIntro = '这是一个<strong>RSS 2.0</strong>格式的网站订阅源。如果您使用的是支持RSS/Atom的浏览器或扩展，可以直接在此查看文章预览。'
+feedSubscribeHelp = '要订阅<strong>{{ .Title }}</strong>的最新内容，请将下方地址复制并添加到您的RSS阅读器（{{ .Readers }}）中：'
+feedLatestPosts = '最新文章列表'
+feedReadMore = '在网站阅读全文并参与讨论 →'
+feedDiagramSource = '图表源码（Mermaid）。请到原文查看渲染后的图形。'
+feedUrlLabel = 'Feed URL'
+copyFeedUrl = '复制订阅地址'
+feedUrlCopyFailed = '无法自动复制，请手动选择上面的地址并复制。'
+listSeparator = '、'
+
+# Sitemap stylesheet
+sitemapPageTitle = 'XML Sitemap（网站地图）'
+sitemapIntro = '这是为搜索引擎与索引爬虫生成的标准XML网站地图。当前共收录<strong>{{ .Count }}</strong>个公开页面。'
+sitemapFilterToolbar = '分类开关工具栏'
+sitemapFilterLabel = '分类开关：'
+sitemapToggleType = '点击显示/隐藏{{ .Type }}'
+sitemapOnlyType = '点击仅查看{{ .Type }}（再次点击恢复全部）'
+sitemapVisibleCount = '当前显示：{{ .Visible }} / {{ .Total }}个页面'
+sitemapHint = '提示：点击上方分类按钮可开启/关闭，点击表格内徽章可仅查看该类，点击表头可切换排序'
+sitemapColumnPath = '页面路径（Path）'
+sitemapColumnLastModified = '最后更新时间（Last Modified）'
+sitemapAllHidden = '已隐藏所有分类的内容，请点击上方分类按钮开启显示。'
+sortByPath = '按路径排序'
+sortByPathAscending = '按路径排序（当前升序）'
+sortByPathDescending = '按路径排序（当前降序）'
+sortByTime = '按更新时间排序'
+sortByTimeAscending = '按更新时间排序（当前升序）'
+sortByTimeDescending = '按更新时间排序（当前降序）'
+contentTypePost = '文章'
+contentTypePage = '页面'
+
+# SEO, pagination and 404
+lastModified = '最后修改'
+license = '许可协议'
+pageNumber = '第{{ .Number }}页'
+pageNotFound = '页面未找到'
+pageNotFoundDesc = '抱歉，您访问的页面不存在或已被移除。'
+backToHome = '返回首页'
+copyCode = '复制'
+copiedCode = '已复制'
+copyFailed = '复制失败'
+copyHeadingLink = '复制本节链接'
+codeVarsTitle = '示例参数'
+codeVarsHint = '修改后同步更新代码块与行内代码'
+codeVarsUrlNotice = '以下参数来自链接，非作者原文。'
+codeVarsModifiedBadge = '参数已修改'
+codeVarsUrlBadge = '参数来自链接'
+codeVarsReset = '重置'
+codeVarModified = '{{ .Desc }}（默认值：{{ .Default }}）'
+
+# Search
+search = '搜索'
+searchPlaceholder = '搜索文章…（按ESC退出）'
+searchNoResults = '未找到相关文章'
+# Read out by the search dialog's live region after each search. search.js
+# fills in the count, so keep the {{ .Count }} placeholder; it is the number
+# of results listed (at most 25), and the wording avoids plural forms.
+searchResultCount = '{{ .Count }}条结果'
+searchClose = '关闭'
+searchLoading = '正在载入索引…'
+searchError = '索引加载失败'
+searchNav = '移动'
+searchOpen = '打开'
+searchDeprecated = '已过时'
+
+# Media embeds
+xPostFrom = '来自X（Twitter）'
+youtubeVideo = 'YouTube视频'
+youtubeVideoTitled = 'YouTube视频：{{ .Title }}'
+
+# Pluralised messages (must stay last: TOML tables capture every key below them)
+[termPostCount]
+  other = '{{ .Name }}（{{ .Count }}篇文章）'
+
+[yearPostCount]
+  other = '{{ .Year }}年（{{ .Count }}篇文章）'
+
+[archivesSummary]
+  other = '按时间线收录全站共{{ .Count }}篇文章'
+
+[listPostCount]
+  other = '共{{ .Count }}篇文章。'

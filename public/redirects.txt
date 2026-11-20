@@ -1,0 +1,2 @@
+/atom.xsl /feed.xsl;
+/rss.xsl /feed.xsl;

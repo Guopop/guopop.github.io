@@ -1,0 +1,2354 @@
+/* ==========================================================================
+   CASCADE LAYERS AND NESTING
+   The layer order is declared once, at the top of tokens.css (the first
+   sheet in the bundle): chaos.reset, chaos.tokens, chaos.base, chaos.syntax,
+   chaos.components. A later layer beats an earlier one whatever the
+   specificity, and any unlayered rule beats them all -- so a site restyles
+   the theme by writing plain CSS, with no specificity to outbid.
+
+   This file fills chaos.components: everything that names a class or id,
+   then print. Element defaults (chaos.base) and the prose components that
+   Markdown renders are in prose.css, which the XSLT pages share; a
+   component here restyles a default by naming a class, never by outbidding
+   it.
+
+   Rules are nested where the parent is a single selector (or a list whose
+   members share one specificity). A nested rule's `&` takes the highest
+   specificity in its parent's list, like :is(), so nesting under a mixed
+   list such as `.a, .b .c` would raise the weaker member; those stay flat.
+   Declarations always come before nested rules.
+
+   A nested @media whose declarations use `+` inside calc() wraps them in
+   `& { }`: Hugo's minifier (tdewolff/minify) strips the spaces around `+`
+   in declarations placed directly in a nested at-rule, and `calc(a+b)` is
+   invalid, so the browser drops the declaration. `-`, `*` and `/` are
+   unaffected, as is any declaration under a selector.
+
+   THE BREAKPOINTS, all of them. They cannot be custom properties -- a media
+   query is evaluated before var() is resolved -- so this list is the only
+   place they are written down. Each is nested in the rule it modifies.
+
+     1359px  max   the article layout loses room for the side TOC, which
+                   becomes the floating toggle and drawer
+      960px  min   dialogue lists (prose.css) hang their speaker column into
+                   the left margin once the centered prose column has room
+      769px  min   the code block line-number column (prose.css).
+                   Complementary with 768px max, which hides that
+                   column outright -- which is why it is 769 and not 768,
+                   so the two can never both apply
+      768px  max   the mobile layout proper: stacked nav behind the menu
+                   toggle, single-column content, narrower gutters, and
+                   the line-number column hidden (tokens.css holds the
+                   token half of it)
+      600px  max   the archive timeline's date column only: narrowed, and
+                   the full date swapped for the short one
+
+   960px, 769px and 768px are written as `screen and (...)`: a page in Blink is
+   about 680-703px wide on A4/Letter, which would otherwise pull the mobile
+   layout onto paper. Print sets its own rules at the end of this file.
+
+   Also: (prefers-reduced-motion: reduce) with the view transition here and
+   the rest in prose.css, (forced-colors: active) with the :focus-visible
+   styles in prose.css and, here, each component whose tinted ground is its
+   only edge, (hover: hover) on numbered code rows in prose.css, (hover: none)
+   with the code copy button, and print at the end.
+   ========================================================================== */
+
+/* Document-level at-rules. They configure the document rather than style an
+   element, so they sit outside the layers. */
+
+/* Enable cross-document view transitions for smooth page navigation */
+@view-transition {
+  navigation: auto;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+/* Physical page setup: standard document margins */
+@media print {
+  @page {
+    size: auto;
+    margin: 20mm 15mm;
+  }
+}
+
+@layer chaos.components {
+  /* ==========================================================================
+     LINKS
+     Link variants shared across components.
+     ========================================================================== */
+
+  /* Plain links - every non-prose link drops the underline. The hover state
+     needs no copy of this: a:hover is in chaos.base. */
+  .brand,
+  .post-entry .post-title a,
+  .toc-content a,
+  nav.main-links a,
+  .skip-link,
+  .heading-anchor,
+  .sidebar-tag-item,
+  .sidebar-more-link,
+  .sidebar-nav-jump,
+  .sidebar-az-item,
+  .sidebar-year-item,
+  .tag-flat-item,
+  .taxo-link,
+  .archive-post-title,
+  .archive-cat-label,
+  .search-item-link,
+  .series-nav-title a,
+  .series-nav-link,
+  .archive-section-title a,
+  blockquote.twitter-tweet > a {
+    border-bottom: none;
+  }
+
+  /* Navigation items - every "row" style link (sidebar entries, taxonomy
+     chips, TOC links) shares one shape, transition, hover and active state,
+     so the individual components only carry their size and resting colour. */
+  .sidebar-tag-item,
+  .sidebar-nav-jump,
+  .sidebar-az-item,
+  .sidebar-year-item,
+  .tag-flat-item,
+  .toc-content a,
+  .series-nav-link {
+    border-radius: var(--radius-sm);
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+  }
+
+  /* The same hover lights up every quiet control: header links and icon
+     buttons as well as the row links. Flat: the list mixes specificities. */
+  .sidebar-tag-item:hover,
+  .sidebar-nav-jump:hover,
+  .sidebar-az-item:hover,
+  .sidebar-year-item:hover,
+  .tag-flat-item:hover,
+  .toc-content a:hover,
+  .series-nav-link:hover,
+  nav.main-links a:hover,
+  .btn-icon:hover {
+    color: var(--primary);
+    background: var(--paper);
+  }
+
+  .sidebar-nav-jump.active,
+  .sidebar-az-item.active,
+  .sidebar-year-item.active,
+  .toc-content a.active,
+  .series-nav-link.active {
+    color: var(--primary);
+    font-weight: 600;
+    background: var(--paper);
+  }
+
+  /* Term chips (term-chip.html): the sidebar and /tags/ variants differ only
+     in size and colour. */
+  .sidebar-tag-item,
+  .tag-flat-item {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* ==========================================================================
+     LAYOUT - CONTAINER & POST LIST
+     Main content container with responsive max-width and horizontal padding.
+     ========================================================================== */
+
+  .container {
+    max-width: var(--max-width);
+    margin: 28px auto;
+    padding: 0 var(--gutter);
+
+    /* Remove padding when container has grid layout - grid handles its own spacing */
+    &:has(.content-layout) {
+      padding: 0;
+    }
+  }
+
+  /* Post list container for list pages (homepage, sections, tags) */
+  .post-list {
+    width: 100%;
+    max-width: var(--content-width);
+    margin: 0 auto;
+  }
+
+  /* Post entry summary cards - separated by whitespace without horizontal rules */
+  .post-entry {
+    margin-bottom: 48px;
+
+    &:last-child {
+      margin-bottom: 24px;
+    }
+  }
+
+  /* Post title - the article's <h1> and each summary's <h2>, sized alike.
+     Colour, weight and line height come from the heading defaults. */
+  .post-title {
+    font-size: var(--h1-size);
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+    text-align: start;
+
+    @media screen and (max-width: 768px) {
+      font-size: 22px;
+    }
+  }
+
+  .post-entry .post-title a {
+    color: var(--heading);
+
+    &:hover {
+      color: var(--primary);
+    }
+  }
+
+  .post-summary-content {
+    margin: 14px 0;
+  }
+
+  .post-more {
+    margin-top: 14px;
+  }
+
+  /* A prose link in bold: colour and underline are the base link's */
+  .read-more {
+    font-weight: 600;
+  }
+
+  /* Taxonomy Links (Categories & Tags - Clean Flat Typographic Links) */
+  .taxo-link {
+    display: inline-block;
+    font-size: var(--small-size);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--primary);
+    }
+  }
+
+  .cat-link {
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .tag-link {
+    color: var(--muted);
+  }
+
+  /* Separators inherit the muted colour of the metadata they sit in */
+  .meta-sep {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .cat-sep {
+    margin-right: 4px;
+  }
+
+  /* ==========================================================================
+     LAYOUT - NAVIGATION
+     Sticky header with flexbox-based navigation menu.
+     ========================================================================== */
+
+  /* Frosted-glass sticky header: the page shows through an 82% --bg, blurred */
+  .site-nav {
+    width: 100%;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-nav);
+    border-bottom: var(--border);
+  }
+
+  /* Navigation inner container - Flexbox layout for brand and menu.
+     The two breakpoints must stay in this order: 768px refines 1359px. */
+  .nav-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 12px var(--gutter);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    @media (max-width: 1359px) {
+      padding: 10px var(--gutter);
+    }
+
+    @media screen and (max-width: 768px) {
+      padding: 8px var(--gutter);
+      gap: 8px;
+      position: relative;
+    }
+  }
+
+  /* Brand/logo - Site name with optional subtitle */
+  .brand {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--heading);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+    flex-shrink: 1;
+
+    &:hover {
+      color: var(--link-hover);
+    }
+
+    /* Brand comes first, takes remaining space */
+    @media screen and (max-width: 768px) {
+      font-size: var(--font-size-base);
+      flex: 1;
+    }
+
+    .subtitle {
+      font-size: var(--small-size);
+      color: var(--muted);
+      margin-left: 6px;
+      font-weight: 400;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 35em;
+
+      /* Hide subtitle on mobile / small tablets */
+      @media screen and (max-width: 768px) {
+        display: none;
+      }
+    }
+  }
+
+  .main-title {
+    font-size: var(--h3-size);
+    white-space: nowrap;
+  }
+
+  /* Navigation links - Right-aligned menu items */
+  nav.main-links {
+    margin-left: auto;                 /* Push to right side */
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+
+    /* Hide main navigation by default on mobile */
+    @media screen and (max-width: 768px) {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      gap: 4px;
+      padding: 16px var(--gutter);
+      background: var(--surface);
+      border-top: var(--border);
+      border-bottom: var(--border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      z-index: var(--z-overlay);
+
+      /* Show navigation when menu is open */
+      &.menu-open {
+        display: flex;
+      }
+    }
+
+    a {
+      color: var(--muted);
+      font-weight: 600;
+      white-space: nowrap;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+
+      /* Stack navigation links vertically on mobile */
+      @media screen and (max-width: 768px) {
+        padding: 12px 16px;
+        font-size: var(--font-size-base);
+        width: 100%;
+      }
+    }
+  }
+
+  /* Base icon button styles - Minimum 44x44px touch target (WCAG 2.5.5) */
+  /* Buttons start from normalize.css: no border or background, a pointer */
+  .btn-icon {
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    font-size: 18px;
+    color: var(--heading);
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
+
+  /* Menu toggle button - Hamburger menu for mobile */
+  .menu-toggle {
+    display: none;                     /* Hidden by default on desktop */
+    font-size: 20px;
+    line-height: 1;
+
+    /* Show hamburger menu toggle on mobile */
+    @media screen and (max-width: 768px) {
+      display: inline-flex;
+    }
+  }
+
+  /* ==========================================================================
+     LAYOUT - TABLE OF CONTENTS (TOC)
+     Sticky sidebar TOC for article pages with responsive behavior.
+     Desktop: right sidebar, Tablet: collapsible top, Mobile: overlay.
+     ========================================================================== */
+
+  /* 2-column layout for article pages
+     Article column: max var(--content-width) (780px)
+     TOC column: Fixed at 280px */
+  .content-layout {
+    display: grid;
+    grid-template-columns: var(--content-width) 280px;
+    gap: 48px;
+    align-items: start;
+    justify-content: center;
+    padding: 0 var(--gutter);
+
+    /* Single column centered article on tablet */
+    @media (max-width: 1359px) {
+      display: block;
+      max-width: var(--content-width);
+      margin: 0 auto;
+    }
+  }
+
+  /* Article takes first column */
+  article.post {
+    grid-column: 1;
+    max-width: var(--content-width);
+
+    @media (max-width: 1359px) {
+      max-width: 100%;
+    }
+  }
+
+  /* Remove top margin from first heading to match index page vertical alignment
+     Grid prevents margin collapse, so we manually remove it */
+  .content-layout article.post > :first-child {
+    margin-top: 0;
+  }
+
+  /* TOC wrapper in second column - sticky container, max 280px */
+  .toc-wrapper {
+    grid-column: 2;
+    position: sticky;
+    top: var(--nav-height);            /* Below sticky header */
+    align-self: start;                 /* Start at top of grid */
+    max-width: 280px;                  /* Constrain TOC width */
+    max-height: calc(100dvh - 100px);  /* Dynamic viewport height for mobile */
+
+    @media (max-width: 1359px) {
+      position: relative;
+      top: 0;
+      max-height: none;
+      grid-column: auto;
+    }
+  }
+
+  /* Side panel - the TOC and the list-page sidebars are one card */
+  .toc,
+  .sidebar-card {
+    --panel-pad: 16px;                 /* The labels' bands bleed out by this much */
+    max-height: calc(100dvh - 100px);  /* Match wrapper height */
+    overflow-y: auto;
+    padding: var(--panel-pad);
+    background: var(--ground);         /* A block of the quiet ground, like a quote: no hairline */
+    border-radius: var(--radius-card);
+    contain: layout style;             /* Optimize rendering performance */
+
+    /* System colours drop the tinted ground that is the only edge. */
+    @media (forced-colors: active) {
+      border: 1px solid CanvasText;
+    }
+  }
+
+  .toc {
+    /* TOC: Switch to mobile overlay behavior on tablet */
+    @media (max-width: 1359px) {
+      display: none;
+      position: fixed;
+      top: var(--nav-height);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-height: calc(100dvh - var(--nav-height));
+      z-index: var(--z-overlay);
+      --panel-pad: 24px;
+      border-radius: 0;
+
+      &.toc-open {
+        display: block;
+      }
+    }
+  }
+
+  /* Panel labels - the uppercase headings of the TOC, the sidebar widgets
+     and the /tags/ sections. Each is an <h2>, so colour and weight come
+     from the heading defaults; only size and spacing differ. */
+  .toc-title,
+  .sidebar-widget-title,
+  .tags-section-heading {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* A panel's labels are bands of --ground-head across its full width: the
+     first caps the panel, a later one divides it. */
+  .toc-title,
+  .sidebar-widget-title {
+    margin-inline: calc(-1 * var(--panel-pad));
+    padding: 8px var(--panel-pad);
+    background: var(--ground-head);
+  }
+
+  .toc-title,
+  .sidebar-card > :first-child > .sidebar-widget-title {
+    margin-top: calc(-1 * var(--panel-pad));
+  }
+
+  .toc-title {
+    font-size: var(--text-md);
+    margin-bottom: 12px;
+  }
+
+  /* TOC content styling */
+  .toc-content {
+    font-size: var(--text-md);
+    line-height: 1.6;
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+
+      ul {
+        padding-left: 16px;
+        margin-top: 4px;
+      }
+    }
+
+    li {
+      margin: 4px 0;
+    }
+
+    a {
+      color: var(--muted);
+      display: block;
+      padding: 6px 10px;
+    }
+  }
+
+  /* TOC toggle button - floating action button on tablet/mobile */
+  .toc-toggle {
+    display: none;
+
+    @media (max-width: 1359px) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: var(--primary-fg);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: var(--z-modal);
+      transition: box-shadow var(--transition-normal);
+
+      &:hover {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    /* Icons are block-level SVGs (normalize.css); only the swap is here */
+    .toc-icon-close {
+      display: none;
+    }
+
+    &[aria-expanded="true"] {
+      .toc-icon-open {
+        display: none;
+      }
+
+      .toc-icon-close {
+        display: block;
+      }
+    }
+  }
+
+  /* ==========================================================================
+     LAYOUT - HOMEPAGE & LIST SIDEBAR
+     Browsing guide sidebar matching TOC sticky layout and design tokens.
+     ========================================================================== */
+
+  /* Every list-page sidebar is also a .toc-wrapper, which places it; this
+     class only drops it where there is no second column to put it in. */
+  .home-sidebar {
+    @media (max-width: 1359px) {
+      display: none;
+    }
+  }
+
+  .sidebar-card {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .sidebar-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .sidebar-widget-title {
+    font-size: var(--text-sm);
+    margin-block: 0;
+  }
+
+  .sidebar-tags-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+  }
+
+  .sidebar-tag-item {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    padding: 2px 6px;
+  }
+
+  .sidebar-widget-footer {
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  .sidebar-more-link {
+    font-size: var(--text-xs);
+    color: var(--link);
+    font-weight: 500;
+
+    &:hover {
+      color: var(--link-hover);
+      text-decoration: underline;
+    }
+  }
+
+  /* Sidebar A-Z Index */
+  .sidebar-tag-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .sidebar-nav-jump {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--muted);
+    padding: 3px 6px;
+  }
+
+  .sidebar-az-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    text-align: center;
+  }
+
+  .sidebar-az-item {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--muted);
+    padding: 3px 0;
+  }
+
+  .sidebar-year-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .sidebar-year-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    font-size: var(--text-sm);
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ==========================================================================
+     LAYOUT & COMPONENTS - PAGE HEADERS & SPECIAL INDEX PAGES
+     Styles for /categories/, /tags/, and /archives/
+     ========================================================================== */
+
+  .page-title-group {
+    margin: 0 0 28px 0;
+  }
+
+  /* An <h1>: size, weight and colour are the heading defaults */
+  .page-title {
+    margin: 0 0 8px 0;
+  }
+
+  .page-subtitle {
+    font-size: var(--font-size-base);
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* Jump targets of the /tags/ and /archives/ sidebars land a little below
+     the navigation, where their headings read as a fresh start. */
+  .tags-section,
+  .tag-letter-group,
+  .archive-year-section,
+  .archive-section {
+    scroll-margin-top: calc(var(--nav-height) + 16px);
+  }
+
+  /* 2. Tags Index & Alphabetical Library (/tags/) */
+  .tags-section {
+    margin-bottom: 32px;
+  }
+
+  .tags-section-heading {
+    font-size: var(--text-md);
+    margin: 0 0 14px 0;
+  }
+
+  .tags-flat-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+  }
+
+  .tag-flat-item {
+    font-size: var(--text-sm);
+    padding: 3px 6px;
+    color: var(--text);
+  }
+
+  .tags-az-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .tag-letter-group {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding-top: 4px;
+  }
+
+  .tag-letter-heading {
+    font-size: var(--font-size-base);
+    color: var(--primary);
+    margin: 0;                         /* It is an <h3>: drop the heading margins */
+    width: 20px;
+    line-height: 1.5;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  /* 3. Archives Timeline (/archives/) */
+  .archive-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .archive-year-title,
+  .archive-section-title {
+    font-size: var(--h3-size);
+    margin: 0 0 12px 0;
+
+    a {
+      color: inherit;
+
+      &:hover {
+        color: var(--primary);
+      }
+    }
+  }
+
+  .archive-section-count {
+    font-size: var(--text-sm);
+    font-weight: normal;
+    color: var(--muted);
+    margin-left: 6px;
+  }
+
+  .series-year-label {
+    display: none;
+
+    @media (max-width: 600px) {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--muted);
+      padding: 6px 8px 2px;
+    }
+  }
+
+  .series-year-group {
+    @media (max-width: 600px) {
+      margin-top: 6px;
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+  }
+
+  .archive-post-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .archive-post-row {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+
+    &:hover {
+      background-color: var(--paper);
+
+      .archive-post-title {
+        color: var(--primary);
+      }
+    }
+  }
+
+  /* On narrow screens the date column narrows and shows the short date */
+  .archive-date {
+    font-size: var(--text-sm);
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 82px;
+
+    @media (max-width: 600px) {
+      width: 44px;
+    }
+  }
+
+  .archive-date-full {
+    @media (max-width: 600px) {
+      display: none;
+    }
+  }
+
+  .archive-date-short {
+    display: none;
+
+    @media (max-width: 600px) {
+      display: inline;
+    }
+  }
+
+  .archive-post-title {
+    font-size: var(--text-md);
+    color: var(--text);
+    flex: 1;
+    line-height: 1.45;
+  }
+
+  .archive-cat-label {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    flex-shrink: 0;
+
+    &:hover {
+      color: var(--primary);
+    }
+  }
+
+  /* ==========================================================================
+     LAYOUT - FOOTER
+     Centered footer with muted text for copyright and supplementary info.
+     ========================================================================== */
+
+  footer.site-foot {
+    max-width: var(--max-width);
+    margin: 40px auto 80px;
+    padding: 24px var(--gutter);
+    color: var(--muted);
+    font-size: var(--text-sm);
+    text-align: center;
+  }
+
+  /* ==========================================================================
+     CONTENT - ARTICLES
+     Article-specific styling with Chinese typography enhancements.
+     Includes justified text and CJK spacing optimizations.
+     ========================================================================== */
+
+  /* Shared CJK prose punctuation and line-breaking rules for article bodies
+     and list-page summaries (text-autospace is inherited from body; feed
+     entries get the same rules in xml-xsl-feed.css):
+     - text-spacing-trim: Optimizes CJK punctuation spacing (Chrome 133+, Safari 18.2+)
+     - No text-spacing shorthand: CSS Text 4 defines it, but Chrome does not
+       parse it (CSS.supports() rejects even "normal"), and "auto-spaces" was
+       never a valid value, so the declaration was dropped wherever it was
+       read. The two longhands it would set are written out instead:
+       text-spacing-trim here, text-autospace inherited from body.
+     - font-feature-settings: "chws" 1 - Enables OpenType Contextual Half-width Spacing for adjacent CJK punctuation
+     - line-break: strict - Enforces strict CJK line-breaking rules */
+  article.post,
+  .post-summary-content {
+    text-spacing-trim: normal;
+    font-feature-settings: "chws" 1;
+    line-break: strict;
+  }
+
+  article.post {
+    /* - text-align: justify - Keeps the right edge on the character grid; CJK lines
+         justify between ideographs, so a full line needs at most a sliver of slack.
+         With start alignment, every line that ends on trimmed punctuation or a
+         Latin run left a visibly ragged edge.
+       - text-wrap is left at its default. WebKit applies pretty to the whole
+         paragraph and ends lines early to even out the rag even where the next
+         character would fit and no kinsoku rule applies; Blink only adjusts the
+         last few lines. Under justify those early breaks would also loosen spacing. */
+    text-align: justify;
+
+    /* Narrow viewports have too few CJK characters per line to absorb Latin/code tokens under justify */
+    @media screen and (max-width: 768px) {
+      text-align: start;
+    }
+  }
+
+  /* Article and summary metadata - Post date, reading time, tags */
+  .meta {
+    color: var(--muted);
+    font-size: var(--small-size);
+    margin-bottom: 8px;
+    line-height: 1.6;
+    text-align: start;
+  }
+
+  .reading-stats {
+    font-family: "Chaos Mono Digits", var(--font-sans);
+  }
+
+  /* Post footer metadata at the end of article (tags & last modified date).
+     Separated from the body by whitespace alone - the muted colour and smaller
+     size already mark it as metadata, so a rule would only add furniture. */
+  .post-footer {
+    margin: 4em 0 1.5em 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    font-size: var(--small-size);
+    color: var(--muted);
+
+    /* Post footer on mobile - Stack tags and modification date cleanly */
+    @media screen and (max-width: 768px) {
+      flex-direction: column;
+      align-items: stretch;              /* baseline is meaningless once stacked */
+      gap: 8px;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 12px;
+      flex: 1 1 300px;
+
+      /* flex-basis follows the main axis, so the 300px row-width hint would
+         otherwise become a 300px block height once the footer stacks. */
+      @media screen and (max-width: 768px) {
+        flex: 0 1 auto;
+      }
+    }
+
+    .post-modified {
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: auto;
+
+      @media screen and (max-width: 768px) {
+        margin-left: 0;
+      }
+    }
+
+    .post-license {
+      flex-basis: 100%;
+
+      @media screen and (max-width: 768px) {
+        flex-basis: auto;
+      }
+    }
+  }
+
+  /* ==========================================================================
+     COMPONENTS - SERIES NAVIGATION PANEL
+     End-of-article series directory card matching the TOC and code-vars
+     panel aesthetic (--ground body capped by a --ground-head header slip).
+     ========================================================================== */
+
+  /* Article cards - in-column panels on the quiet ground, each capped by a
+     --ground-head header band. */
+  .series-nav,
+  .x-card,
+  .code-vars-panel {
+    background: var(--ground);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+
+    /* System colours drop the tinted ground that is the only edge. */
+    @media (forced-colors: active) {
+      border: 1px solid CanvasText;
+    }
+  }
+
+  .series-nav {
+    margin: 2.5em 0 0;
+    contain: layout style;
+    text-align: start;
+
+    ~ .post-footer {
+      margin-top: 2em;
+    }
+
+    ol {
+      margin: 0;
+      padding: 8px 12px 8px 2.25em;
+    }
+
+    li {
+      margin: 2px 0;
+
+      &::marker {
+        font-size: var(--text-sm);
+      }
+
+      &:has(> .active)::marker {
+        color: var(--primary);
+        font-weight: 600;
+      }
+    }
+  }
+
+  .series-nav-title {
+    margin: 0;
+    padding: 8px 16px;
+    font-size: var(--text-sm);
+    background: var(--ground-head);
+
+    a {
+      color: inherit;
+
+      &:hover {
+        color: var(--primary);
+      }
+    }
+  }
+
+  .series-nav-link {
+    display: block;
+    padding: 4px 8px;
+    font-size: var(--text-md);
+    line-height: 1.5;
+    color: var(--text);
+    text-align: left;
+  }
+
+  .series-nav-pager {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 8px 16px;
+    border-top: 1px solid var(--ground-head);
+    font-size: var(--text-sm);
+
+    a {
+      color: var(--heading);
+      font-weight: 500;
+      border: none;
+
+      &:hover {
+        color: var(--primary);
+      }
+    }
+
+    .series-nav-next {
+      margin-inline-start: auto;
+      text-align: end;
+    }
+  }
+
+  /* ==========================================================================
+     COMPONENTS - X (TWITTER) EMBED CARDS
+     Refined static embed cards for X/Twitter posts with theme-consistent styling.
+     Supports light/dark mode, responsive mobile layout, and WCAG accessibility.
+     ========================================================================== */
+
+  /* Card container */
+  .x-card {
+    margin: 1.5em auto;
+    max-width: 550px;
+    width: 100%;
+    contain: layout style;
+
+    @media screen and (max-width: 768px) {
+      margin: 1.5em 0;
+      max-width: 100%;
+    }
+  }
+
+  /* Header band with X branding, a step deeper than the card, as a panel's
+     labels are */
+  .x-card-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 1.25em;
+    background: var(--ground-head);
+    font-size: var(--small-size);
+
+    @media screen and (max-width: 768px) {
+      padding: 8px 1em;
+    }
+  }
+
+  .x-card-source {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--heading);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    letter-spacing: 0.2px;
+
+    @media screen and (max-width: 768px) {
+      font-size: var(--text-xs);
+      gap: 6px;
+    }
+
+    /* A mask rather than background-image, so the logo follows currentColor */
+    .x-logo {
+      display: inline-block;
+      flex-shrink: 0;
+      width: 15px;
+      height: 15px;
+
+      @media screen and (max-width: 768px) {
+        width: 14px;
+        height: 14px;
+      }
+
+      background-color: currentColor;
+      /* The logo is a background: print drops those unless told to keep it */
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z'/%3E%3C/svg%3E") center / contain no-repeat;
+
+      @media (forced-colors: active) {
+        background-color: CanvasText;
+      }
+    }
+  }
+
+  /* Body and blockquote styling */
+  .x-card-body {
+    padding: 1em 1.25em;
+
+    @media screen and (max-width: 768px) {
+      padding: 0.9em 1em;
+    }
+  }
+
+  .x-card blockquote.twitter-tweet,
+  article.post blockquote.twitter-tweet:not(.x-card blockquote) {
+    font-size: var(--text-sm);
+    font-style: normal;
+    line-height: 1.5;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .x-card blockquote.twitter-tweet {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+  }
+
+  /* Ground, radius and the forced-colours edge are the quote's own */
+  article.post blockquote.twitter-tweet:not(.x-card blockquote) {
+    margin: 1.5em auto;
+    max-width: 550px;
+    padding: 1em 1.25em;
+  }
+
+  blockquote.twitter-tweet {
+    /* Tweet text paragraph */
+    p {
+      color: var(--text);
+      font-size: var(--text-lg);
+      line-height: 1.65;
+      margin: 0 0 12px 0;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      text-align: left;
+
+      @media screen and (max-width: 768px) {
+        font-size: var(--text-md);
+        line-height: 1.6;
+        margin-bottom: 10px;
+      }
+
+      /* Links in the tweet's text are prose links, like any in a quote;
+         only long short-links need to break anywhere */
+      a {
+        word-break: break-all;
+      }
+    }
+
+    /* The byline and date link: metadata, so a plain link (see LINKS) */
+    > a {
+      color: var(--muted);
+      margin-left: 6px;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--link);
+      }
+    }
+  }
+
+  /* ==========================================================================
+     COMPONENTS - CODE COPY BUTTON
+     Code block layout and colours are in prose.css and syntax.css.
+     ========================================================================== */
+
+  /* Code copy button - Floating subtle button in top right */
+  /* The copy button and the variable tooltip: one small pill */
+  .code-copy-btn,
+  .code-var-tooltip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    font-size: var(--text-xs);
+    line-height: 1.4;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Quiet copy controls (modules/code-copy.js and modules/heading-copy.js):
+     hidden until their parent is hovered or focused, with a masked icon that
+     swaps to a tick or cross on .copied / .failed. */
+  .code-copy-btn,
+  .heading-anchor {
+    color: var(--muted);
+    opacity: 0;
+    transition: opacity var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
+
+    &::before {
+      content: "";
+      flex: none;
+      background-color: currentColor;
+      mask: var(--copy-icon) center / contain no-repeat;
+    }
+
+    &.copied {
+      opacity: 1;
+      color: var(--alert-tip-border);
+      --copy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+    }
+
+    &.failed {
+      opacity: 1;
+      color: var(--alert-warning-border);
+      --copy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");
+    }
+  }
+
+  .code-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: var(--bg);       /* The page ground, a step off --code-bg in both modes */
+    z-index: 5;
+    -webkit-user-select: none;
+    user-select: none;
+
+    --copy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='13' height='13' rx='2'/%3E%3Cpath d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'/%3E%3C/svg%3E");
+
+    &::before {
+      width: 14px;
+      height: 14px;
+
+      @media (forced-colors: active) {
+        background-color: ButtonText;
+      }
+    }
+
+    /* Touch users need the same readable label as mouse and keyboard users. */
+    @media (hover: none) {
+      opacity: 1;
+    }
+
+    &:hover {
+      color: var(--heading);
+      background-color: var(--paper);
+    }
+
+    @media (forced-colors: active) {
+      border: 1px solid ButtonBorder;
+    }
+  }
+
+  .heading-anchor {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    width: 1.35em;
+    height: 1.35em;
+    margin-left: 0.3em;
+    border-radius: var(--radius-sm);
+
+    --copy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/svg%3E");
+
+    &::before {
+      width: 0.85em;
+      height: 0.85em;
+
+      @media (forced-colors: active) {
+        background-color: LinkText;
+      }
+    }
+
+    &:hover {
+      color: var(--primary);
+      background-color: var(--paper);
+    }
+  }
+
+  .highlight:hover .code-copy-btn,
+  .highlight:focus-within .code-copy-btn,
+  .code-copy-btn:focus-visible,
+  article.post :is(h2, h3, h4, h5, h6):hover .heading-anchor,
+  .heading-anchor:focus-visible {
+    opacity: 1;
+  }
+
+  /* ==========================================================================
+     COMPONENTS - INTERACTIVE CODE VARIABLES
+     Parameter panel (code-vars.html) and synchronized <var class="code-var">
+     placeholders inside code blocks (code-vars.js).
+     ========================================================================== */
+
+  .code-vars-panel {
+    position: relative;
+    margin: 1.25em 0;
+
+    &:has(> .code-vars-reset:not([hidden])) .code-vars-header {
+      padding-right: 76px;
+    }
+  }
+
+  .code-vars-header {
+    display: flex;
+    align-items: center;
+    gap: 6px 10px;
+    flex-wrap: wrap;
+    padding: 8px 16px;
+    background: var(--ground-head);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  .code-vars-chevron {
+    flex-shrink: 0;
+    color: var(--muted);
+    transition: transform var(--transition-fast);
+  }
+
+  .code-vars-details[open] > .code-vars-header .code-vars-chevron {
+    transform: rotate(90deg);
+  }
+
+  .code-vars-title {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--heading);
+  }
+
+  .code-vars-hint {
+    font-size: var(--text-xs);
+    color: var(--muted);
+  }
+
+  .code-vars-url-notice {
+    margin: 12px 16px 0;
+    padding: 8px 12px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--alert-warning-border);
+    background: var(--alert-warning-bg);
+    border-radius: var(--radius-sm);
+  }
+
+  .code-vars-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px 16px;
+    padding: 12px 16px;
+  }
+
+  .code-vars-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .code-vars-label {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    line-height: 1.35;
+  }
+
+  .code-vars-input {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    color: var(--heading);
+    background: var(--surface);
+    border: var(--border);
+    border-radius: var(--radius-sm);
+    padding: 4px 8px;
+    min-width: 0;
+    caret-color: var(--primary);
+    transition: border-color var(--transition-fast);
+
+    &.is-from-url {
+      border-color: var(--alert-warning-border);
+    }
+
+    @media (forced-colors: active) {
+      border: 1px solid ButtonBorder;
+    }
+  }
+
+  .code-vars-reset {
+    position: absolute;
+    top: 6px;
+    right: 12px;
+    z-index: 1;
+    padding: 2px 8px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--link);
+    border-radius: var(--radius-sm);
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+
+    &:hover {
+      color: var(--link-hover);
+      background: var(--paper);
+    }
+  }
+
+  /* Per-code-block status pill when any variable inside that block differs
+     from the article's default, so readers jumping straight to an anchor still
+     see that the commands were modified or pre-filled from a link. */
+  .code-vars-badge {
+    position: absolute;
+    top: 0;
+    left: 12px;
+    transform: translateY(-50%);
+    z-index: 6;
+    padding: 1px 8px;
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--muted);
+    background: var(--surface);
+    border: var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+
+    &:hover {
+      color: var(--heading);
+      background: var(--paper);
+    }
+
+    &.is-from-url {
+      color: var(--alert-warning-border);
+      background: var(--alert-warning-bg);
+      border-color: var(--alert-warning-border);
+    }
+  }
+
+  /* Text keeps its inherited syntax or prose ink so variables never collide
+     with --syntax-* roles or read as links; zero horizontal padding keeps
+     monospace character columns aligned. */
+  .code-var {
+    font-style: normal;
+    font-family: inherit;
+    color: inherit;
+    background: var(--code-var-bg);
+    padding: 0;
+    border-radius: 2px 2px 0 0;
+    border-bottom: 1px dashed var(--code-var-border);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+
+    &[contenteditable] {
+      cursor: text;
+    }
+
+    &.is-hovered,
+    &:hover {
+      background: var(--code-var-hover-bg);
+      border-bottom-color: var(--code-var-hover-border);
+    }
+
+    &.is-modified {
+      border-bottom-style: solid;
+    }
+
+    &.is-from-url {
+      border-bottom-color: var(--alert-warning-border);
+    }
+
+    &:focus {
+      background: var(--surface);
+      color: var(--heading);
+      border-bottom-color: transparent;
+      outline: var(--focus-outline);
+      outline-offset: 1px;
+    }
+
+    @media (forced-colors: active) {
+      border-bottom: 1px dashed LinkText;
+    }
+  }
+
+  .code-var-tooltip {
+    position: fixed;
+    z-index: var(--z-top);
+    color: var(--heading);
+    background: var(--surface);
+    border: var(--border);
+    box-shadow: var(--shadow-dialog);
+    pointer-events: none;
+    white-space: nowrap;
+    max-width: min(360px, 90vw);
+
+    &[hidden] {
+      display: none;
+    }
+
+    .code-var-icon {
+      flex-shrink: 0;
+      color: var(--muted);
+    }
+
+    .code-var-tooltip-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  /* ==========================================================================
+     COMPONENTS - MERMAID DIAGRAMS
+     Clean container layout for Mermaid SVG flowcharts.
+     Theme rendering (light/dark) is managed dynamically by Mermaid JS.
+     ========================================================================== */
+
+  pre.mermaid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;           /* Not a code slab: no ground */
+    padding: 1.5rem 0;
+    margin: 1.5rem 0;
+
+    /* Diagram labels are figure text, not code, so opt out of the monospace
+       stack every other <pre> gets. This is also load-bearing: Mermaid measures
+       label widths in a temporary container under <body>, where the inherited
+       font is the body sans stack, then the finished SVG inherits from this
+       element. A monospace <pre> here renders ~34% wider than it was measured,
+       which overflows foreignObject and clips node labels. */
+    font-family: inherit;
+  }
+
+  .mermaid {
+    /* Scaled to fit by normalize.css like any SVG; only the font is set here */
+    svg {
+      font-family: inherit;
+    }
+
+    .edgeLabel p,
+    .edgeLabel span,
+    .labelBkg {
+      color: var(--text) !important;
+    }
+  }
+
+  /* ==========================================================================
+     COMPONENTS - PAGINATION
+     Previous/next navigation for paginated content.
+     Flexbox layout with space-between alignment.
+     ========================================================================== */
+
+  .pager {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin: 36px 0;
+
+    /* Pagination links - Button-style with minimum 44px touch target (WCAG 2.5.5) */
+    a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 8px 18px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      border: none;                    /* A button, not a prose link: no dotted underline */
+      color: var(--heading);
+      background: var(--ground);
+      transition: color var(--transition-fast), background var(--transition-fast);
+
+      &:hover {
+        background: var(--paper);
+        color: var(--primary);
+      }
+
+      @media (forced-colors: active) {
+        border: 1px solid LinkText;
+      }
+    }
+
+    /* Pagination alignment - Previous left, next right */
+    .page-prev {
+      text-align: left;
+    }
+
+    .page-next {
+      margin-left: auto;
+      text-align: right;
+    }
+  }
+
+  /* ==========================================================================
+     SPECIALIZED - INLINE MATH
+     Inline math line-breaking. CJK typography (emphasis, ruby) is in prose.css.
+     ========================================================================== */
+
+  /* Inline math wrapper - Prevent line breaks before following punctuation
+     Works in Safari with CJK line-breaking rules; known limitation in Chrome
+     The wrapper treats the formula as an atomic inline unit for line-breaking */
+  .math-inline {
+    display: inline-block;             /* Atomic inline unit - works with Safari's CJK line-break rules */
+    text-emphasis: none;               /* Never draw emphasis marks over inline formulas */
+
+    /* Insert word joiner after inline math to prevent line break before punctuation
+       Provides additional protection in Safari; Chrome doesn't respect this for CJK */
+    &::after {
+      content: '\2060';                /* Word joiner (U+2060) */
+    }
+  }
+
+  /* ==========================================================================
+     ACCESSIBILITY
+     Focus states and keyboard navigation support.
+     ========================================================================== */
+
+  /* Screen reader only - Visually hidden but accessible to assistive tech */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Print-only content - Hidden on screen, visible in print */
+  .print-only {
+    display: none;
+  }
+
+  /* Skip to content link - Hidden until focused via keyboard */
+  .skip-link {
+    position: absolute;
+    top: -100%;                        /* Completely off-screen */
+    left: 8px;
+    padding: 10px 18px;                /* Maintained for smooth transition */
+    z-index: var(--z-top);
+    transition: top var(--transition-fast), opacity var(--transition-fast);
+    opacity: 0;                        /* Invisible by default */
+
+    &:focus {
+      top: 8px;
+      opacity: 1;
+      background: var(--primary);      /* Visual styles only when focused */
+      color: var(--primary-fg);
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+    }
+  }
+
+  /* ==========================================================================
+     CLIENT-SIDE SEARCH MODAL
+     Styled consistently with Chaos design tokens (Japanese papercraft aesthetic)
+     ========================================================================== */
+
+  dialog.search-dialog {
+    border: none;
+    background: var(--surface);
+    color: var(--text);
+    border-radius: var(--radius-card);
+    width: min(680px, 92vw);
+    max-width: 680px;
+    padding: 0;
+    box-shadow: var(--shadow-dialog);
+    overflow: hidden;
+    top: 10vh;                         /* A modal dialog is fixed in the top layer */
+    margin: 0 auto;
+    overscroll-behavior: contain;
+
+    /* A wheel over the backdrop starts its scroll chain at the backdrop, not
+       in the dialog, so the page underneath would scroll. Making the backdrop
+       a contained scroll container stops it where overscroll-behavior applies
+       to non-scrollable scroll containers (current Chrome); the :modal lock
+       below covers the other engines. */
+    &::backdrop {
+      overflow: hidden;
+      overscroll-behavior: contain;
+      background: rgba(0, 0, 0, 0.35);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+    }
+  }
+
+  /* Lock the page while the search dialog is modal; :modal stops matching on
+     close, so no script has to undo it. html already has scrollbar-gutter:
+     stable (prose.css), so hiding the scrollbar shifts nothing. */
+  html:has(dialog.search-dialog:modal) {
+    overflow: hidden;
+  }
+
+  .search-box {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .search-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--ground);
+
+    .search-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: none;
+    color: var(--heading);
+    font-size: var(--font-size-base);
+    font-family: inherit;
+    font-weight: 400;
+    min-width: 0;
+    caret-color: var(--primary);
+    appearance: none;
+    border-radius: var(--radius-sm);
+
+    /* WebKit's own search-field decorations */
+    &::-webkit-search-decoration,
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-results-button,
+    &::-webkit-search-results-decoration {
+      display: none;
+    }
+
+    &::placeholder {
+      color: var(--muted);
+      opacity: 1;
+    }
+  }
+
+  /* A .btn-icon: size, hover and touch target come from there */
+  .search-close {
+    padding: 4px;
+    font-size: var(--text-md);
+    color: var(--muted);
+    border-radius: var(--radius-sm);
+  }
+
+  .search-results {
+    max-height: min(480px, 55vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;      /* Don't chain to the page under the modal */
+    padding: 8px 12px;
+    background: var(--surface);
+
+    mark {
+      font-weight: 600;
+    }
+  }
+
+  .search-hint,
+  .search-loading,
+  .search-empty,
+  .search-error {
+    padding: 36px 16px;
+    text-align: center;
+    color: var(--muted);
+    font-size: var(--small-size);
+  }
+
+  .search-item-link {
+    display: block;
+    padding: 10px 14px;
+    margin-bottom: 4px;
+    border-radius: var(--radius-md);
+    color: inherit;
+    transition: background-color var(--transition-fast);
+
+    &:hover,
+    &[aria-selected="true"] {
+      background-color: var(--paper);
+
+      .search-item-title {
+        color: var(--primary);
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+      }
+    }
+  }
+
+  .search-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+
+  .search-item-title {
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    color: var(--heading);
+    transition: color var(--transition-fast);
+  }
+
+  .search-item-date {
+    font-size: var(--small-size);
+    color: var(--muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .search-item-summary {
+    font-size: var(--small-size);
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .search-item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Result pills: tags and the deprecated badge */
+  .search-tag,
+  .search-badge-deprecated {
+    line-height: 1.4;
+    border-radius: var(--radius-sm);
+    background: var(--ground);
+    border: none;
+    color: var(--muted);
+  }
+
+  .search-tag {
+    font-size: var(--text-xs);
+    padding: 1px 7px;
+  }
+
+  .search-badge-deprecated {
+    display: inline-block;
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    padding: 0 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .search-footer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 20px;
+    font-size: var(--text-xs);
+    color: var(--muted);
+    background: var(--ground);
+    flex-wrap: wrap;
+  }
+
+  .search-shortcut kbd {
+    font-family: inherit;
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    background: var(--surface);
+    color: var(--heading);
+    padding: 1px 5px;
+    border-radius: var(--radius-sm);
+    border: none;
+    margin: 0 2px;
+  }
+
+  /* System colours suppress the tinted grounds; retain clear boundaries there. */
+  @media (forced-colors: active) {
+    dialog.search-dialog,
+    .search-input {
+      border: 1px solid CanvasText;
+    }
+
+    .search-item-link[aria-selected="true"] {
+      outline: 1px solid Highlight;
+      outline-offset: -2px;
+    }
+  }
+
+  /* ==========================================================================
+     PRINT STYLES
+     Optimized layout for printing articles.
+     Removes navigation, interactive elements, and applies print-friendly colors.
+     Kept together rather than nested per component: print is a presentation
+     of its own, and reads best top to bottom. Its element rules are here too,
+     not in chaos.base, since they must outrank the screen rules above them.
+     ========================================================================== */
+
+  @media print {
+    /* Print takes the light palette (the dark tokens are screen-only) on
+       white paper, with black ink for text; only what differs from the
+       light values is restated. No !important needed: chaos.components
+       outranks the chaos.tokens layer. */
+    :root {
+      color-scheme: light;
+      --bg: #FFFFFF;
+      --surface: #FFFFFF;
+      --text: #000000;
+      --heading: #000000;
+      --muted: #444444;
+      --border-color: #CCCCCC;
+
+      /* Print typography scale */
+      --line-height: 1.6;              /* Slightly tighter for print */
+      --font-size-base: 10pt;
+      --h1-size: 17.85pt;              /* 10.5pt × 1.7 */
+      --h2-size: 13.65pt;              /* 10.5pt × 1.3 */
+      --h3-size: 11.55pt;              /* 10.5pt × 1.1 */
+      --text-2xs: 7pt;
+      --text-xs: 7.5pt;
+      --text-sm: 8.5pt;
+      --text-md: 9pt;
+      --text-lg: 9.5pt;
+      --small-size: 9pt;               /* ~85.7% of base (metadata, captions) */
+    }
+
+    /* Hide interactive and navigation elements, and the reading stats (word
+       count/read time), which page numbers make redundant */
+    .site-nav,
+    .site-foot,
+    .skip-link,
+    .toc-wrapper,
+    .pager,
+    .heading-anchor,
+    #remark42,
+    .reading-stats,
+    .code-vars-panel,
+    .code-var-tooltip,
+    .series-nav,
+    button {
+      display: none !important;
+    }
+
+    /* Reset container for full-width printing with page margins */
+    .container {
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+
+      /* Article pages: minimal padding to prevent clipping hanging list markers,
+         three-digit print note numbers, and hanging code line numbers */
+      &:has(.content-layout) {
+        padding: 0 30px;
+      }
+    }
+
+    /* Remove grid layout for article pages */
+    .content-layout {
+      display: block;
+    }
+
+    /* Article styling for print */
+    article.post {
+      max-width: 100%;
+
+      /* Reserve left margin space when hanging dialogue speaker labels appear,
+         matching wide-screen layout without narrowing non-dialogue articles. */
+      &:has(dl.dialogue) {
+        padding-left: 3em;
+      }
+    }
+
+    /* Better paragraph handling with URLs */
+    p {
+      orphans: 3;                      /* Prevent short orphans with URLs */
+      widows: 3;                       /* Prevent short widows with URLs */
+    }
+
+    /* Improve heading breaks - avoid page breaks immediately after headings or glossary terms.
+       Side-by-side dialogue rows must NOT apply break-after: avoid on <dt>, otherwise Blink
+       pushes whole multi-turn <dl> grids onto the next page, leaving large blank gaps. */
+    h1, h2, h3, dt {
+      page-break-after: avoid;
+      break-after: avoid-page;
+    }
+
+    dl.dialogue dt {
+      page-break-after: auto;
+      break-after: auto;
+      break-inside: avoid;
+    }
+
+    /* Images, diagrams, copybook grids and blockquotes should not break */
+    img, blockquote, .mermaid, p.mizige {
+      break-inside: avoid;
+    }
+
+    p.mizige {
+      --mizige-cell: calc(var(--font-size-base) * 4.1); /* 41pt (~14.5mm): fits 8-char couplets on one A4/Letter row */
+
+      rt {
+        font-size: var(--text-sm);
+        margin-bottom: 0.25em;
+      }
+    }
+
+    /* A table may break between rows, never inside one; the browser repeats
+       its <thead> on each page by default */
+    tr {
+      break-inside: avoid;
+    }
+
+    /* Smart breaking for code blocks using orphan/widow control
+       - Blocks with < 14 lines will stay together (avoids wasted space)
+       - Blocks with >= 14 lines can break across pages
+       - Ensures minimum 7 lines on each side of break (prevents 1-2 line fragments) */
+    pre {
+      orphans: 7;
+      widows: 7;
+    }
+
+    pre:not(.mermaid) {
+      overflow: visible;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    /* Avoid breaking a code block immediately after a heading */
+    h1 + pre, h2 + pre, h3 + pre,
+    h1 + .highlight, h2 + .highlight, h3 + .highlight {
+      page-break-before: avoid;
+      break-before: avoid-page;
+    }
+
+    /* Remove link underlines for cleaner print */
+    a {
+      border-bottom: none;
+      color: var(--text);
+    }
+
+    /* URLs in print notes, permalink, and bare body links use the monospace
+       face so 0/O and 1/l/I stay unambiguous on paper. */
+    .print-url {
+      font-family: var(--font-mono);
+      font-size: 0.92em;
+    }
+
+    /* Notes: footnotes and links numbered as one sequence by
+       print-footnotes.js. A Markdown footnote's mark and a link's mark look
+       alike, since they lead to the same list. */
+    a.footnote-ref,
+    .print-note-ref a {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .print-note-backref {
+      color: var(--primary);
+    }
+
+    /* Print references section; an article with no notes prints none */
+    .print-only:empty {
+      display: none;
+    }
+
+    .print-only {
+      display: block;
+    }
+
+    #print-references {
+      margin-top: 3em;
+      padding-top: 1em;
+      border-top: 2px solid var(--border-color);
+
+      h2 {
+        font-size: var(--h2-size);
+        margin-bottom: 1em;
+      }
+
+      ol {
+        font-size: 0.85em;
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      li {
+        margin-bottom: 0.5em;
+        overflow-wrap: anywhere;       /* A URL breaks where it must; prose as usual */
+        break-inside: avoid;
+      }
+
+      /* A footnote's paragraphs, set as tightly as the list around them */
+      li p {
+        margin: 0;
+      }
+    }
+
+    /* Post footer for print - separated by whitespace, same as on screen */
+    .post-footer {
+      margin-top: 2.5em;
+      break-inside: avoid;
+    }
+
+    /* Permalink for print - the QR code with the address beside it */
+    .print-permalink {
+      display: flex;
+      align-items: center;
+      gap: 4mm;
+      font-size: var(--small-size);
+      color: var(--muted);
+      margin-top: 1.5em;               /* Collapses into the post footer's */
+      break-inside: avoid;
+
+      /* The code, fetched only once these rules apply */
+      &::before {
+        content: var(--qr);
+        flex: none;
+        line-height: 0;
+        image-rendering: pixelated;    /* Modules stay square at printer resolution */
+      }
+
+      p {
+        margin: 0;
+      }
+
+      span {
+        display: block;
+        overflow-wrap: anywhere;
+      }
+
+      /* The caption */
+      span:first-child {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      a {
+        color: inherit;
+      }
+    }
+
+    /* Disable CSS containment for proper print layout */
+    .alert {
+      contain: none;                   /* Prevent margin/spacing issues in print */
+    }
+
+    /* Quotes print as an indent, without the ground; callouts keep theirs.
+       blockquote.quote is named because its padding outranks a bare element. */
+    blockquote,
+    blockquote.quote {
+      background: transparent;
+      margin: 0.5em 0;
+      padding-left: 1em;
+    }
+
+    /* X embed card print styles */
+    .x-card {
+      border: var(--border);
+      break-inside: avoid;
+      margin: 16px 0;
+    }
+
+    /* YouTube embeds swap the live player iframe for a QR reference card */
+    .youtube-embed {
+      display: none;
+    }
+
+    .youtube-print {
+      margin: 1em 0;
+      padding: 0.6em 0.85em;
+      border: var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    /* Code styling - Consolidated styles for all code elements */
+    code {
+      background: var(--code-bg);
+    }
+
+    /* Remove background from code inside code blocks */
+    pre code {
+      background: transparent;
+    }
+
+    /* Code block containers - Shared margin and padding */
+    .highlight,
+    pre:not(.highlight pre, .mermaid) {
+      margin: 0.5em 0;
+      padding: 8px;
+      background: var(--code-bg);
+    }
+
+    /* Pre elements - Reset styles (container provides styling) */
+    .highlight pre {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+    }
+
+    /* Code blocks WITHOUT line numbers - restore padding */
+    .highlight pre:not(.chroma) {
+      padding: 8px;
+    }
+
+    /* Keep hanging line numbers inside quote/callout cards */
+    blockquote .highlight:has(.lntable) {
+      margin-left: 1.5em;
+    }
+
+    /* Hanging line numbers on paper: hide the screen's separate scroll-pinned
+       <pre> column in both Blink and WebKit and hang a per-row counter outside
+       .highlight's 8px left padding, so wrapped lines and page breaks never
+       drift out of alignment. */
+    .chroma .lntable {
+      counter-reset: code-line var(--ln-start, 0);
+
+      tr,
+      .lntd:last-child {
+        display: block;
+        break-inside: auto;
+      }
+
+      .lntd:first-child {
+        display: none;
+      }
+
+      .line {
+        position: relative;
+
+        &::before {
+          counter-increment: code-line;
+          content: counter(code-line);
+          content: counter(code-line) / "";
+          position: absolute;
+          right: calc(100% + 8px + 0.5em);
+          color: var(--muted);
+          font-variant-numeric: tabular-nums;
+          white-space: nowrap;
+        }
+      }
+
+      .cl {
+        min-width: 0;
+      }
+    }
+
+    /* Syntax highlighting needs nothing here: the dark --syntax-* roles are
+       scoped to @media screen, so every reader prints the light colours. */
+    .code-var {
+      background: transparent;
+      color: inherit;
+      border-bottom: none;
+    }
+  }
+}

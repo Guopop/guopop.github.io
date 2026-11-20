@@ -1,0 +1,3 @@
+[submodule "themes/chaos"]
+	path = themes/chaos
+	url = https://github.com/delphij/chaos-theme.git
