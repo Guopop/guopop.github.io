@@ -52,3 +52,6 @@ summaryLength = 1
     
   [params.search]
     enable = true
+
+[services.rss]
+  limit = -1
