@@ -111,6 +111,17 @@ jobs:
           path: ${{ runner.temp }}/.cache/hugo
           key: hugo-${{ github.run_id }}
           restore-keys: hugo-
+          
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install jieba  
+
+      - name: Generate search index (Chaos theme)
+        run: |
+          python3 themes/chaos/tools/build_search_index.py \
+            --content content \
+            --output assets/search-index.json
 
       - name: Build
         run: |
